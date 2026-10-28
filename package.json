@@ -1,0 +1,42 @@
+{
+  "name": "@lumphammer/equilux",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sunrise, sunset and twilight anywhere in the world, charted over the year",
+  "author": "Neil de Carteret",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "postinstall": "wrangler types",
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro build && wrangler dev",
+    "deploy": "astro build && wrangler deploy",
+    "check": "astro check",
+    "test": "vitest run",
+    "data:fetch": "sh scripts/fetch-geonames.sh",
+    "data:build": "node scripts/build-places.ts",
+    "data:local": "node scripts/build-places.ts && wrangler d1 migrations apply equilux --local && wrangler d1 execute equilux --local --file=data/places.sql",
+    "data:remote": "node scripts/build-places.ts && wrangler d1 migrations apply equilux --remote && wrangler d1 execute equilux --remote --file=data/places.sql"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.4.3",
+    "@astrojs/preact": "^6.1.1",
+    "astro": "^7.4.3",
+    "maplibre-gl": "^6.16.0",
+    "preact": "^11.1.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@types/node": "^26.6.5",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.5",
+    "wrangler": "^4.154.0"
+  },
+  "allowScripts": {
+    "workerd@1.20261019.1": true,
+    "workerd@1.20261023.1": true,
+    "esbuild@0.28.2": true,
+    "sharp@0.35.5": true
+  }
+}

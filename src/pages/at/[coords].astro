@@ -1,0 +1,11 @@
+---
+import { cacheFor } from '../../lib/cache.ts';
+import PlacePage from '../../components/PlacePage.astro';
+import { parseCoordinates, pointPlace } from '../../lib/places.server.ts';
+
+const at = parseCoordinates(Astro.params.coords ?? '');
+if (!at) return Astro.rewrite('/404');
+const place = await pointPlace(at.lat, at.lng);
+cacheFor(Astro.response, 600);
+---
+<PlacePage place={place} />

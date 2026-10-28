@@ -1,0 +1,18 @@
+---
+import { cacheFor } from '../../../lib/cache.ts';
+import PlacePage from '../../../components/PlacePage.astro';
+import { slug as slugify } from '../../../lib/place.ts';
+import { findPlace } from '../../../lib/places.server.ts';
+
+const id = Number(Astro.params.id);
+const place = Number.isInteger(id) ? await findPlace(id) : null;
+if (!place) return Astro.rewrite('/404');
+
+// One URL per place, whatever the slug
+const canonical = slugify(place.name);
+if ((Astro.params.slug ?? '') !== canonical) {
+  return Astro.redirect(`/place/${id}/${canonical}${Astro.url.search}`, 301);
+}
+cacheFor(Astro.response, 600);
+---
+<PlacePage place={place} />

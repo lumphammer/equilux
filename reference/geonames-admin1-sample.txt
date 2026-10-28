@@ -1,0 +1,44 @@
+AU.02	New South Wales	New South Wales	2155400
+CA.01	Alberta	Alberta	5883102
+CA.08	Ontario	Ontario	6093943
+DE.02	Bavaria	Bavaria	2951839
+FR.11	Île-de-France	Ile-de-France	3012874
+GB.ENG	England	England	6269131
+GG.6417213	St Pierre du Bois	St Pierre du Bois	6417213
+GG.6417214	Torteval	Torteval	6417214
+GG.6417215	Saint Saviour	Saint Saviour	6417215
+GG.6417223	Forest	Forest	6417223
+GG.6417224	St Martin	St Martin	6417224
+GG.6417226	Saint Andrew	Saint Andrew	6417226
+GG.6417228	St Peter Port	St Peter Port	6417228
+GG.6417229	Castel	Castel	6417229
+GG.6417233	St Sampson	St Sampson	6417233
+GG.8989934	Alderney	Alderney	8989934
+JE.3237072	St Clement	St Clement	3237072
+JE.3237497	St John	St John	3237497
+JE.3237530	Trinity	Trinity	3237530
+JE.3237716	St Martîn	St Martin	3237716
+JE.3237864	St Helier	St Helier	3237864
+SJ.21	Svalbard	Svalbard	7521757
+US.AR	Arkansas	Arkansas	4099753
+US.GA	Georgia	Georgia	4197000
+US.MD	Maryland	Maryland	4361885
+US.MO	Missouri	Missouri	4398678
+US.TN	Tennessee	Tennessee	4662168
+US.TX	Texas	Texas	4736286
+US.CT	Connecticut	Connecticut	4831725
+US.IA	Iowa	Iowa	4862182
+US.IL	Illinois	Illinois	4896861
+US.ME	Maine	Maine	4971068
+US.MI	Michigan	Michigan	5001836
+US.NH	New Hampshire	New Hampshire	5090174
+US.NY	New York	New York	5128638
+US.OH	Ohio	Ohio	5165418
+US.VT	Vermont	Vermont	5242283
+US.WI	Wisconsin	Wisconsin	5279468
+US.CA	California	California	5332921
+US.ID	Idaho	Idaho	5596512
+US.WA	Washington	Washington	5815135
+US.KY	Kentucky	Kentucky	6254925
+US.PA	Pennsylvania	Pennsylvania	6254927
+US.VA	Virginia	Virginia	6254928

@@ -1,0 +1,30 @@
+---
+// A page for a place: a server-rendered summary for search engines and
+// link previews, then the interactive app.
+import Base from '../layouts/Base.astro';
+import App from './App.tsx';
+import { daylightRows } from '../lib/daylight.ts';
+import { formatTime } from '../lib/format.ts';
+import { requestLocale } from '../lib/locale.ts';
+import { type Place, placePath } from '../lib/place.ts';
+import { rangeFromParams } from '../lib/ranges.ts';
+import { localDate } from '../lib/tz.ts';
+
+interface Props {
+  place: Place;
+  guessed?: boolean;
+}
+const { place, guessed } = Astro.props;
+const locale = requestLocale(Astro.request);
+const today = localDate(Date.now(), place.timeZone);
+const [row] = daylightRows(place, today, today);
+const sun = row.crossings.day;
+const summary =
+  typeof sun === 'object'
+    ? `Sunrise ${formatTime(sun.rise, place.timeZone, locale)}, sunset ${formatTime(sun.set, place.timeZone, locale)} today`
+    : sun === 'up' ? 'The sun doesn’t set today' : 'The sun doesn’t rise today';
+const title = guessed ? 'Equilux: sunrise and sunset times, anywhere' : `Sunrise and sunset in ${place.name} · Equilux`;
+---
+<Base title={title} description={`${summary} in ${place.label}. Sunrise, sunset and twilight times charted over the year.`} canonical={guessed ? '/' : placePath(place)}>
+  <App client:load initial={place} guessed={guessed} initialRange={rangeFromParams(Astro.url.searchParams)} locale={locale} />
+</Base>

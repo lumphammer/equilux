@@ -1,0 +1,59 @@
+---
+import { cacheFor } from '../lib/cache.ts';
+import Base from '../layouts/Base.astro';
+
+cacheFor(Astro.response, 600);
+---
+<Base title="About · Equilux">
+  <div class="prose">
+    <h1>About Equilux</h1>
+    <p>
+      Equilux shows when the sun rises and sets anywhere in the world, and how that changes over the
+      year. Search for a place, or click anywhere on the map.
+    </p>
+    <p>
+      The equilux is the day when daylight and darkness are exactly equal. It isn’t the equinox: the
+      atmosphere bends sunlight over the horizon, and sunrise counts from the top of the sun rather
+      than its middle, so on the equinox itself the day is a few minutes longer than the night. The
+      equilux comes a few days before the March equinox and a few days after the September one.
+    </p>
+
+    <h2>Reading the chart</h2>
+    <p>
+      Each column is a day, from midnight at the bottom to midnight at the top, in local clock time.
+      The lightest band is daylight; the bands around it are the three stages of twilight, darker as
+      the sun sinks further below the horizon; the darkest is night. Where the clocks change, the bands
+      jump an hour.
+    </p>
+    <dl>
+      <dt>Sunrise and sunset</dt>
+      <dd>When the top of the sun is on the horizon, allowing for the atmosphere bending its light.</dd>
+      <dt>Civil twilight</dt>
+      <dd>The sun up to 6° below the horizon: light enough to be outdoors without lights. Its start and end are first and last light.</dd>
+      <dt>Nautical twilight</dt>
+      <dd>6° to 12° below: the horizon at sea is still visible, and the brighter stars are out.</dd>
+      <dt>Astronomical twilight</dt>
+      <dd>12° to 18° below: dark to the eye, but not yet dark enough for astronomers.</dd>
+      <dt>Golden hour</dt>
+      <dd>Here, the sun less than 6° up before sunset: the warm, low light photographers like.</dd>
+    </dl>
+    <p>
+      Times are calculated, not looked up, and should be good to a minute or two. Hills, buildings and
+      unusual weather can make the real thing differ a little.
+    </p>
+
+    <h2>Places and time zones</h2>
+    <p>
+      Places come from <a href="https://www.geonames.org/">GeoNames</a>: every town and village with at least
+      500 people. A point picked on the map takes its time zone from the nearest of them; far out to sea,
+      it uses nautical time, an hour for every 15° of longitude.
+    </p>
+
+    <h2>History</h2>
+    <p>
+      Equilux began in 2007 as Sunlightr, written in Perl on Catalyst, with a three-step form and a
+      table of times. It was rebuilt and renamed in 2026, with Astro on Cloudflare, adding the map and
+      the charts. It still matches place names the same way.
+    </p>
+  </div>
+</Base>

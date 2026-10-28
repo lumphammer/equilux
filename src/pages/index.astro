@@ -1,0 +1,13 @@
+---
+// Start somewhere sensible: near where Cloudflare thinks the visitor is,
+// or London.
+import PlacePage from '../components/PlacePage.astro';
+import { findPlace, nearestPlace, visitorLocation } from '../lib/places.server.ts';
+
+const LONDON = 2643743;
+const visitor = visitorLocation(Astro.request);
+const place = (visitor.point && (await nearestPlace(visitor.point.lat, visitor.point.lng))) || (await findPlace(LONDON));
+if (!place) throw new Error('No places in the database: run npm run data:local');
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+---
+<PlacePage place={place} guessed />
