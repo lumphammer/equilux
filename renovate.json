@@ -1,11 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    "schedule:weekly",
-    "group:allNonMajor",
-    ":automergeMinor"
-  ],
+  "extends": ["config:recommended", "schedule:weekly", "group:allNonMajor", ":automergeMinor"],
   "assignees": ["n3dst4"],
   "ignoreDeps": ["typescript"],
   "minimumReleaseAge": "1 day"

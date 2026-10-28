@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import type { Place } from '../lib/place.ts';
 
 interface Props {
@@ -15,7 +15,6 @@ export function SearchBox({ onPlace, onPoint }: Props) {
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
   const [searched, setSearched] = useState('');
-  const latest = useRef('');
 
   useEffect(() => {
     const q = query.trim();
@@ -24,13 +23,14 @@ export function SearchBox({ onPlace, onPoint }: Props) {
       setSearched('');
       return;
     }
-    latest.current = q;
+    // Typing on cancels the pending search, and ignores its answer if it was already asked
+    let cancelled = false;
     const timer = setTimeout(async () => {
       try {
         const response = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
-        const { results } = (await response.json()) as { results: Place[] };
-        if (latest.current !== q) return;
-        setResults(results);
+        const { results: found } = (await response.json()) as { results: Place[] };
+        if (cancelled) return;
+        setResults(found);
         setSearched(q);
         setActive(0);
         setOpen(true);
@@ -38,7 +38,10 @@ export function SearchBox({ onPlace, onPoint }: Props) {
         // Offline or the like; the map still works
       }
     }, 150);
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [query]);
 
   const choose = (place: Place) => {
@@ -73,13 +76,18 @@ export function SearchBox({ onPlace, onPoint }: Props) {
 
   return (
     <form class="search" role="search" onSubmit={submit}>
-      <label for="place-search" class="visually-hidden">Find a place</label>
+      <label htmlFor="place-search" class="visually-hidden">
+        Find a place
+      </label>
       <input
         id="place-search"
         type="search"
         placeholder="Find a place, or “51.48, 0”"
         autocomplete="off"
         spellcheck={false}
+        // Preact's types want `list` with role="combobox"; oxlint then takes
+        // the role as implied, but without a real list it isn't
+        // oxlint-disable-next-line jsx-a11y/no-redundant-roles
         role="combobox"
         list={undefined}
         aria-expanded={showList}
@@ -94,6 +102,8 @@ export function SearchBox({ onPlace, onPoint }: Props) {
       {showList && (
         <ul id="place-results" role="listbox" class="results">
           {results.map((place, i) => (
+            // Keys are handled by the input, which owns the list (aria-activedescendant)
+            // oxlint-disable-next-line jsx-a11y/click-events-have-key-events
             <li
               key={place.id}
               id={`place-result-${i}`}

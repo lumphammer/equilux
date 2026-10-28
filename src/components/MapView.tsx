@@ -26,61 +26,70 @@ const STYLES = {
  */
 export function MapView({ place, onPick }: Props) {
   const container = useRef<HTMLDivElement>(null);
-  const map = useRef<MapLibreMap | null>(null);
-  const marker = useRef<Marker | null>(null);
-  const pick = useRef(onPick);
-  pick.current = onPick;
-  const [ready, setReady] = useState(false);
+  const [view, setView] = useState<{ map: MapLibreMap; marker: Marker } | null>(null);
+  // Where the map starts; later places move it rather than recreate it
+  const [start] = useState(() =>
+    place
+      ? { center: [place.lng, place.lat] as [number, number], zoom: place.id ? 6 : 5 }
+      : { center: [0, 30] as [number, number], zoom: 1 },
+  );
 
   useEffect(() => {
     let cancelled = false;
+    let created: MapLibreMap | undefined;
     let timer: ReturnType<typeof setInterval> | undefined;
     (async () => {
       const maplibre = await import('maplibre-gl');
       maplibre.setWorkerUrl(workerUrl);
       if (cancelled || !container.current) return;
       const dark = matchMedia('(prefers-color-scheme: dark)').matches;
-      const m = new maplibre.Map({
+      const map = new maplibre.Map({
         container: container.current,
         style: dark ? STYLES.dark : STYLES.light,
-        center: place ? [place.lng, place.lat] : [0, 30],
-        zoom: place ? (place.id ? 6 : 5) : 1,
+        ...start,
         attributionControl: { compact: true },
         cooperativeGestures: true,
       });
-      m.addControl(new maplibre.NavigationControl({ showCompass: false }), 'top-right');
-      m.on('click', (e: MapMouseEvent) => pick.current(e.lngLat.lat, e.lngLat.wrap().lng));
-      m.on('load', () => {
-        m.addSource('night', { type: 'geojson', data: nightPolygon(Date.now()) });
-        m.addLayer({
+      map.addControl(new maplibre.NavigationControl({ showCompass: false }), 'top-right');
+      map.on('load', () => {
+        map.addSource('night', { type: 'geojson', data: nightPolygon(Date.now()) });
+        map.addLayer({
           id: 'night',
           type: 'fill',
           source: 'night',
           paint: { 'fill-color': '#0d366b', 'fill-opacity': dark ? 0.35 : 0.18 },
         });
-        timer = setInterval(() => (m.getSource('night') as GeoJSONSource).setData(nightPolygon(Date.now())), 60_000);
+        timer = setInterval(() => (map.getSource('night') as GeoJSONSource).setData(nightPolygon(Date.now())), 60_000);
       });
-      marker.current = new maplibre.Marker({ color: '#eb6834' });
-      map.current = m;
-      setReady(true);
+      created = map;
+      setView({ map, marker: new maplibre.Marker({ color: '#eb6834' }) });
     })();
     return () => {
       cancelled = true;
       clearInterval(timer);
-      map.current?.remove();
+      created?.remove();
     };
-  }, []);
+  }, [start]);
 
   useEffect(() => {
-    if (!ready || !map.current || !marker.current) return;
+    if (!view) return;
+    const onClick = (e: MapMouseEvent) => onPick(e.lngLat.lat, e.lngLat.wrap().lng);
+    view.map.on('click', onClick);
+    return () => {
+      view.map.off('click', onClick);
+    };
+  }, [view, onPick]);
+
+  useEffect(() => {
+    if (!view) return;
     if (!place) {
-      marker.current.remove();
+      view.marker.remove();
       return;
     }
-    marker.current.setLngLat([place.lng, place.lat]).addTo(map.current);
-    const zoom = Math.max(map.current.getZoom(), place.id ? 6 : 4);
-    map.current.easeTo({ center: [place.lng, place.lat], zoom, duration: 800 });
-  }, [ready, place?.lat, place?.lng]);
+    view.marker.setLngLat([place.lng, place.lat]).addTo(view.map);
+    const zoom = Math.max(view.map.getZoom(), place.id ? 6 : 4);
+    view.map.easeTo({ center: [place.lng, place.lat], zoom, duration: 800 });
+  }, [view, place]);
 
   return (
     <div class="map-wrap">

@@ -16,7 +16,9 @@ export function DayTable({ rows, today, timeZone, locale, fileName }: Props) {
     <details class="table-view">
       <summary>Table of times ({rows.length} days)</summary>
       <p>
-        <button type="button" class="button" onClick={() => downloadCsv(rows, timeZone, fileName)}>Download CSV</button>
+        <button type="button" class="button" onClick={() => downloadCsv(rows, timeZone, fileName)}>
+          Download CSV
+        </button>
       </p>
       <div class="table-scroll">
         <table>
@@ -34,7 +36,10 @@ export function DayTable({ rows, today, timeZone, locale, fileName }: Props) {
           </thead>
           <tbody>
             {rows.map((r, i) => (
-              <tr key={r.date} class={[i === today && 'is-today', r.clockChange && 'is-clock-change'].filter(Boolean).join(' ')}>
+              <tr
+                key={r.date}
+                class={[i === today && 'is-today', r.clockChange && 'is-clock-change'].filter(Boolean).join(' ')}
+              >
                 <th scope="row">
                   {formatDate(r.date, locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
                   {r.season && <span class="row-note">{r.season}</span>}
@@ -63,15 +68,34 @@ function downloadCsv(rows: DayRow[], timeZone: string, fileName: string) {
   const cell = (c: DayRow['crossings']['day'], which: 'rise' | 'set') =>
     typeof c === 'string' ? (c === 'up' ? 'all day' : 'none') : local(c[which]);
   const lines = [
-    ['date', 'astronomical_dawn', 'nautical_dawn', 'civil_dawn', 'sunrise', 'solar_noon', 'sunset', 'civil_dusk',
-      'nautical_dusk', 'astronomical_dusk', 'daylight_minutes', 'utc_offset_minutes'].join(','),
+    [
+      'date',
+      'astronomical_dawn',
+      'nautical_dawn',
+      'civil_dawn',
+      'sunrise',
+      'solar_noon',
+      'sunset',
+      'civil_dusk',
+      'nautical_dusk',
+      'astronomical_dusk',
+      'daylight_minutes',
+      'utc_offset_minutes',
+    ].join(','),
     ...rows.map((r) =>
       [
         r.date,
-        cell(r.crossings.astronomical, 'rise'), cell(r.crossings.nautical, 'rise'), cell(r.crossings.civil, 'rise'),
-        cell(r.crossings.day, 'rise'), local(r.noon), cell(r.crossings.day, 'set'),
-        cell(r.crossings.civil, 'set'), cell(r.crossings.nautical, 'set'), cell(r.crossings.astronomical, 'set'),
-        r.dayLength.toFixed(1), r.offset,
+        cell(r.crossings.astronomical, 'rise'),
+        cell(r.crossings.nautical, 'rise'),
+        cell(r.crossings.civil, 'rise'),
+        cell(r.crossings.day, 'rise'),
+        local(r.noon),
+        cell(r.crossings.day, 'set'),
+        cell(r.crossings.civil, 'set'),
+        cell(r.crossings.nautical, 'set'),
+        cell(r.crossings.astronomical, 'set'),
+        r.dayLength.toFixed(1),
+        r.offset,
       ].join(','),
     ),
   ];

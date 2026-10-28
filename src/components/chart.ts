@@ -57,7 +57,10 @@ export function dateTicks(rows: DayRow[], c: Columns, locale: string): Tick[] {
       if (k % every) return;
       const date = rows[i].date;
       const showYear = date.slice(5, 7) === '01' || k === 0;
-      ticks.push({ i, label: formatDate(date, locale, showYear ? { month: 'short', year: 'numeric' } : { month: 'short' }) });
+      ticks.push({
+        i,
+        label: formatDate(date, locale, showYear ? { month: 'short', year: 'numeric' } : { month: 'short' }),
+      });
     });
     return ticks;
   }
@@ -68,8 +71,34 @@ export function dateTicks(rows: DayRow[], c: Columns, locale: string): Tick[] {
   return ticks;
 }
 
+/**
+ * Props that make a chart a slider over its days: focusable, arrow keys move
+ * the crosshair, and screen readers hear the day under it.
+ */
+export function chartSlider(options: {
+  label: string;
+  rows: DayRow[];
+  hover: number | null;
+  setHover: (i: number | null) => void;
+  today: number;
+  describe: (row: DayRow) => string;
+}) {
+  const { label, rows, hover, setHover, today, describe } = options;
+  const current = hover ?? (today >= 0 ? today : 0);
+  return {
+    role: 'slider',
+    tabIndex: 0,
+    'aria-label': label,
+    'aria-valuemin': 0,
+    'aria-valuemax': rows.length - 1,
+    'aria-valuenow': current,
+    'aria-valuetext': describe(rows[current]),
+    onKeyDown: keyboardHover(rows.length, hover, setHover, today),
+  } as const;
+}
+
 /** Arrow keys move the crosshair; Escape clears it. */
-export function keyboardHover(n: number, hover: number | null, setHover: (i: number | null) => void, today: number) {
+function keyboardHover(n: number, hover: number | null, setHover: (i: number | null) => void, today: number) {
   return (e: KeyboardEvent) => {
     const start = hover ?? (today >= 0 ? today : 0);
     const moves: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, PageUp: -7, PageDown: 7 };

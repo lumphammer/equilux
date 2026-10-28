@@ -1,8 +1,9 @@
 import { type DayRow } from '../lib/daylight.ts';
 import { formatDate, formatDelta, formatDuration } from '../lib/format.ts';
-import { columns, dateTicks, keyboardHover, MARGIN, tooltipStyle, useWidth } from './chart.ts';
+import { chartSlider, columns, dateTicks, MARGIN, tooltipStyle, useWidth } from './chart.ts';
 
 const HEIGHT = 200;
+const LONG_DATE = { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' } as const;
 
 interface Props {
   rows: DayRow[];
@@ -48,10 +49,14 @@ export function DayLengthChart({ rows, today, hover, setHover, locale }: Props) 
         <svg
           width={width}
           height={HEIGHT}
-          role="img"
-          aria-label="Chart of hours of daylight by date"
-          tabIndex={0}
-          onKeyDown={keyboardHover(rows.length, hover, setHover, today)}
+          {...chartSlider({
+            label: 'Day length by date. Use the arrow keys to move between days.',
+            rows,
+            hover,
+            setHover,
+            today,
+            describe: (r) => `${formatDate(r.date, locale, LONG_DATE)}: ${formatDuration(r.dayLength)} of daylight`,
+          })}
           onPointerMove={(e) => setHover(c.index(e.offsetX))}
           onPointerLeave={() => setHover(null)}
           onBlur={() => setHover(null)}
@@ -59,12 +64,22 @@ export function DayLengthChart({ rows, today, hover, setHover, locale }: Props) 
           {Array.from({ length: Math.floor((hi - lo) / step) + 1 }, (_, k) => lo + k * step).map((h) => (
             <g key={h}>
               <line class="grid" x1={MARGIN.left} x2={MARGIN.left + c.plotWidth} y1={y(h * 60)} y2={y(h * 60)} />
-              <text class="tick" x={MARGIN.left - 8} y={y(h * 60)} dy="0.32em" text-anchor="end">{h}h</text>
+              <text class="tick" x={MARGIN.left - 8} y={y(h * 60)} dy="0.32em" text-anchor="end">
+                {h}h
+              </text>
             </g>
           ))}
-          <line class="axis" x1={MARGIN.left} x2={MARGIN.left + c.plotWidth} y1={MARGIN.top + plotHeight} y2={MARGIN.top + plotHeight} />
+          <line
+            class="axis"
+            x1={MARGIN.left}
+            x2={MARGIN.left + c.plotWidth}
+            y1={MARGIN.top + plotHeight}
+            y2={MARGIN.top + plotHeight}
+          />
           {ticks.map((t) => (
-            <text key={t.i} class="tick" x={c.left(t.i)} y={HEIGHT - 8}>{t.label}</text>
+            <text key={t.i} class="tick" x={c.left(t.i)} y={HEIGHT - 8}>
+              {t.label}
+            </text>
           ))}
           {today >= 0 && (
             <g class="today-light">
@@ -79,27 +94,33 @@ export function DayLengthChart({ rows, today, hover, setHover, locale }: Props) 
               <g key={label}>
                 <circle class="series-dot" cx={c.centre(i)} cy={y(lengths[i])} r={4} />
                 <text class="direct-label" x={c.centre(i)} y={y(lengths[i]) + (above ? -10 : 18)} text-anchor={anchor}>
-                  {label}: {formatDuration(lengths[i])}, {formatDate(rows[i].date, locale, { day: 'numeric', month: 'short' })}
+                  {label}: {formatDuration(lengths[i])},{' '}
+                  {formatDate(rows[i].date, locale, { day: 'numeric', month: 'short' })}
                 </text>
               </g>
             );
           })}
           {hover !== null && (
             <g>
-              <line class="crosshair-light" x1={c.centre(hover)} x2={c.centre(hover)} y1={MARGIN.top} y2={MARGIN.top + plotHeight} />
+              <line
+                class="crosshair-light"
+                x1={c.centre(hover)}
+                x2={c.centre(hover)}
+                y1={MARGIN.top}
+                y2={MARGIN.top + plotHeight}
+              />
               <circle class="series-dot" cx={c.centre(hover)} cy={y(lengths[hover])} r={4} />
             </g>
           )}
         </svg>
         {row && hover !== null && (
-          <div
-            class="tooltip"
-            style={tooltipStyle(c.centre(hover), width, MARGIN.top, 220)}
-          >
-            <div class="tip-date">{formatDate(row.date, locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
+          <div class="tooltip" style={tooltipStyle(c.centre(hover), width, MARGIN.top, 220)}>
+            <div class="tip-date">{formatDate(row.date, locale, LONG_DATE)}</div>
             <div class="tip-headline">
               <strong>{formatDuration(row.dayLength)}</strong>
-              {hover > 0 && <span class="muted"> {formatDelta(row.dayLength - rows[hover - 1].dayLength)} on the day before</span>}
+              {hover > 0 && (
+                <span class="muted"> {formatDelta(row.dayLength - rows[hover - 1].dayLength)} on the day before</span>
+              )}
             </div>
           </div>
         )}

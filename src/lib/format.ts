@@ -17,8 +17,10 @@ export const formatTime = (ms: number, timeZone: string, locale: string) =>
 
 /** A clock time from minutes after midnight (for axes). */
 export const formatClock = (minutes: number, locale: string, short = false) =>
-  formatter(locale, short ? { hour: 'numeric', timeZone: 'UTC' } : { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' })
-    .format(Date.UTC(2000, 0, 1, 0, Math.round(minutes)));
+  formatter(
+    locale,
+    short ? { hour: 'numeric', timeZone: 'UTC' } : { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' },
+  ).format(Date.UTC(2000, 0, 1, 0, Math.round(minutes)));
 
 export const formatDate = (date: IsoDate, locale: string, options: Intl.DateTimeFormatOptions) =>
   formatter(locale, { ...options, timeZone: 'UTC' }).format(utcNoon(date));

@@ -26,26 +26,42 @@ export function Today({ place, today, days: [yesterday, day, tomorrow], locale }
 
   return (
     <section class="today-panel" aria-labelledby="today-heading">
-      <h2 id="today-heading">
-        Today, {formatDate(today, locale, { weekday: 'long', day: 'numeric', month: 'long' })}
-      </h2>
+      <h2 id="today-heading">Today, {formatDate(today, locale, { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
       {polar && <p class="polar-note">{polar}.</p>}
       <div class="tiles">
-        <Tile label="Sunrise" value={polar ? '—' : crossingText(sun, tz, locale, 'rise')}
-          note={day.riseAzimuth !== null ? `${compass(day.riseAzimuth)}, ${Math.round(day.riseAzimuth)}°` : polarName} />
-        <Tile label="Sunset" value={polar ? '—' : crossingText(sun, tz, locale, 'set')}
-          note={day.riseAzimuth !== null ? `${compass(360 - day.riseAzimuth)}, ${Math.round(360 - day.riseAzimuth)}°` : polarName} />
-        <Tile label="Daylight" value={formatDuration(day.dayLength)}
-          note={change || trend ? `${formatDelta(change)} on yesterday` : 'No change'} />
-        <Tile label="Solar noon" value={time(day.noon)}
-          note={day.noonAltitude > 0 ? `Sun ${Math.round(day.noonAltitude)}° up` : 'Sun below the horizon'} />
+        <Tile
+          label="Sunrise"
+          value={polar ? '—' : crossingText(sun, tz, locale, 'rise')}
+          note={day.riseAzimuth !== null ? `${compass(day.riseAzimuth)}, ${Math.round(day.riseAzimuth)}°` : polarName}
+        />
+        <Tile
+          label="Sunset"
+          value={polar ? '—' : crossingText(sun, tz, locale, 'set')}
+          note={
+            day.riseAzimuth !== null
+              ? `${compass(360 - day.riseAzimuth)}, ${Math.round(360 - day.riseAzimuth)}°`
+              : polarName
+          }
+        />
+        <Tile
+          label="Daylight"
+          value={formatDuration(day.dayLength)}
+          note={change || trend ? `${formatDelta(change)} on yesterday` : 'No change'}
+        />
+        <Tile
+          label="Solar noon"
+          value={time(day.noon)}
+          note={day.noonAltitude > 0 ? `Sun ${Math.round(day.noonAltitude)}° up` : 'Sun below the horizon'}
+        />
         <Tile label="First light" value={crossingText(day.crossings.civil, tz, locale, 'rise')} note="Civil dawn" />
         <Tile label="Last light" value={crossingText(day.crossings.civil, tz, locale, 'set')} note="Civil dusk" />
         <Tile label="Golden hour" {...goldenHour(golden, sun, time)} />
       </div>
       <ul class="facts">
         {trend !== 0 && sun !== 'up' && sun !== 'down' && (
-          <li>Days are getting {trend > 0 ? 'longer' : 'shorter'}, by {formatDelta(trend).slice(1)} tomorrow.</li>
+          <li>
+            Days are getting {trend > 0 ? 'longer' : 'shorter'}, by {formatDelta(trend).slice(1)} tomorrow.
+          </li>
         )}
         <NextSeason today={today} timeZone={tz} locale={locale} />
         <NextClockChange today={today} timeZone={tz} locale={locale} />

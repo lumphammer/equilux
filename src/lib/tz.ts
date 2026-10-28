@@ -10,8 +10,12 @@ function partsFormatter(timeZone: string) {
     f = new Intl.DateTimeFormat('en-GB', {
       timeZone,
       hourCycle: 'h23',
-      year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
     });
     partsFormatters.set(timeZone, f);
   }
@@ -87,8 +91,7 @@ export function nauticalTimeZone(lng: number): string {
 
 export function isValidTimeZone(timeZone: string): boolean {
   try {
-    new Intl.DateTimeFormat('en', { timeZone });
-    return true;
+    return Boolean(new Intl.DateTimeFormat('en', { timeZone }).resolvedOptions().timeZone);
   } catch {
     return false;
   }

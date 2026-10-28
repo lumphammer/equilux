@@ -41,7 +41,7 @@ export async function searchPlaces(query: string, preferCountry = '', limit = 8)
        ORDER BY exact DESC, (exact AND p.country = ?2) DESC, CASE WHEN exact THEN alias END, p.population DESC
        LIMIT ?3`,
     )
-      .bind(...[term, preferCountry, limit, ...(qualifier ? [qualifier] : [])])
+      .bind(term, preferCountry, limit, ...(qualifier ? [qualifier] : []))
       .all<Row>();
 
   // Prefix matches once there's enough to go on; exact matches before that
@@ -49,7 +49,7 @@ export async function searchPlaces(query: string, preferCountry = '', limit = 8)
   const exact = 'n.name = ?1 AND (n.alias = 0 OR length(?1) > 4)';
   let { results } = await run(prefix ? "n.name >= ?1 AND n.name < ?1 || '~'" : 'n.name = ?1', exact, name);
   if (!results.length && prefix) ({ results } = await run('n.loose = ?1', 'n.alias = 0', normaliseLoose(namePart)));
-  return results.map(({ exact, alias, ...place }: Row & { exact?: number; alias?: number }) => place);
+  return results.map(({ exact: _exact, alias: _alias, ...place }: Row & { exact?: number; alias?: number }) => place);
 }
 
 /** The nearest named place to a point, or null if there's none within a few hundred km. */
@@ -67,7 +67,7 @@ export async function nearestPlace(lat: number, lng: number): Promise<(Place & {
       .bind(lat, lng, cos * cos, radius, dLng)
       .first<Row & { d2: number }>();
     if (row) {
-      const { d2, ...place } = row;
+      const { d2: _d2, ...place } = row;
       return { ...place, km: distanceKm(lat, lng, place.lat, place.lng) };
     }
   }

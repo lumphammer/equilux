@@ -2,10 +2,14 @@ import { useMemo } from 'preact/hooks';
 import { type DayRow, intervals } from '../lib/daylight.ts';
 import { formatClock, formatDate, formatDelta, formatDuration } from '../lib/format.ts';
 import type { Level } from '../lib/sun.ts';
-import { type Columns, columns, dateTicks, keyboardHover, MARGIN, tooltipStyle, useWidth } from './chart.ts';
-import { CrossingTimes } from './DayDetails.tsx';
+import { chartSlider, type Columns, columns, dateTicks, MARGIN, tooltipStyle, useWidth } from './chart.ts';
+import { CrossingTimes, spanText } from './DayDetails.tsx';
 
 const HEIGHT = 380;
+const PLOT_HEIGHT = HEIGHT - MARGIN.top - MARGIN.bottom;
+const LONG_DATE = { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' } as const;
+// Midnight at the bottom, so the sun rises up the chart
+const y = (minutes: number) => MARGIN.top + PLOT_HEIGHT * (1 - minutes / 1440);
 // Painted in this order over the night background: each covers the next
 // darkest
 const BANDS: { level: Level; label: string }[] = [
@@ -26,12 +30,11 @@ interface Props {
 
 export function DaylightChart({ rows, today, hover, setHover, timeZone, locale }: Props) {
   const [ref, width] = useWidth<HTMLDivElement>();
-  const c = columns(rows.length, width);
-  const plotHeight = HEIGHT - MARGIN.top - MARGIN.bottom;
-  const y = (minutes: number) => MARGIN.top + plotHeight * (1 - minutes / 1440);
+  const c = useMemo(() => columns(rows.length, width), [rows.length, width]);
+  const plotHeight = PLOT_HEIGHT;
 
-  const bands = useMemo(() => BANDS.map((b) => ({ ...b, shapes: bandShapes(rows, b.level, c, y) })), [rows, width]);
-  const sunLine = useMemo(() => sunLines(rows, c, y), [rows, width]);
+  const bands = useMemo(() => BANDS.map((b) => ({ ...b, shapes: bandShapes(rows, b.level, c) })), [rows, c]);
+  const sunLine = useMemo(() => sunLines(rows, c), [rows, c]);
   const ticks = dateTicks(rows, c, locale);
   const markers = rows.flatMap((r, i) =>
     r.season ? [{ i, text: r.season.includes('solstice') ? 'Solstice' : 'Equinox', title: r.season }] : [],
@@ -45,21 +48,35 @@ export function DaylightChart({ rows, today, hover, setHover, timeZone, locale }
       <figcaption>
         <h2>Sunrise, sunset and twilight</h2>
         <ul class="legend">
-          {[...BANDS].reverse().map((b) => (
-            <li key={b.level}><span class={`swatch band-${b.level}`} />{b.label}</li>
+          {BANDS.toReversed().map((b) => (
+            <li key={b.level}>
+              <span class={`swatch band-${b.level}`} />
+              {b.label}
+            </li>
           ))}
-          <li><span class="swatch band-night" />Night</li>
-          <li><span class="line-key sun" />Sunrise and sunset</li>
+          <li>
+            <span class="swatch band-night" />
+            Night
+          </li>
+          <li>
+            <span class="line-key sun" />
+            Sunrise and sunset
+          </li>
         </ul>
       </figcaption>
       <div class="plot" ref={ref}>
         <svg
           width={width}
           height={HEIGHT}
-          role="img"
-          aria-label="Chart of sunrise, sunset and twilight times by date. Use the arrow keys to read values."
-          tabIndex={0}
-          onKeyDown={keyboardHover(rows.length, hover, setHover, today)}
+          {...chartSlider({
+            label: 'Sunrise, sunset and twilight by date. Use the arrow keys to move between days.',
+            rows,
+            hover,
+            setHover,
+            today,
+            describe: (r) =>
+              `${formatDate(r.date, locale, LONG_DATE)}: sunrise to sunset ${spanText(r.crossings.day, timeZone, locale)}, ${formatDuration(r.dayLength)} of daylight`,
+          })}
           onPointerMove={(e) => setHover(c.index(e.offsetX))}
           onPointerLeave={() => setHover(null)}
           onBlur={() => setHover(null)}
@@ -67,21 +84,39 @@ export function DaylightChart({ rows, today, hover, setHover, timeZone, locale }
           <rect class="band-night" x={MARGIN.left} y={MARGIN.top} width={c.plotWidth} height={plotHeight} />
           {bands.map((b) => (
             <g key={b.level} class={`band-${b.level}`} shape-rendering="crispEdges">
-              {b.shapes.rects.map(([x, y0, w, h], k) => <rect key={k} x={x} y={y0} width={w} height={h} />)}
+              {b.shapes.rects.map(([x, y0, w, h], k) => (
+                <rect key={k} x={x} y={y0} width={w} height={h} />
+              ))}
               <path d={b.shapes.path} shape-rendering="geometricPrecision" />
             </g>
           ))}
           {[3, 6, 9, 12, 15, 18, 21].map((h) => (
-            <line key={h} class="grid-on-dark" x1={MARGIN.left} x2={MARGIN.left + c.plotWidth} y1={y(h * 60)} y2={y(h * 60)} />
+            <line
+              key={h}
+              class="grid-on-dark"
+              x1={MARGIN.left}
+              x2={MARGIN.left + c.plotWidth}
+              y1={y(h * 60)}
+              y2={y(h * 60)}
+            />
           ))}
           <path class="sun-line" d={sunLine} />
           {changes.map(({ i }) => (
-            <line key={i} class="clock-change" x1={c.left(i)} x2={c.left(i)} y1={MARGIN.top} y2={MARGIN.top + plotHeight} />
+            <line
+              key={i}
+              class="clock-change"
+              x1={c.left(i)}
+              x2={c.left(i)}
+              y1={MARGIN.top}
+              y2={MARGIN.top + plotHeight}
+            />
           ))}
           {today >= 0 && (
             <g class="today">
               <line x1={c.centre(today)} x2={c.centre(today)} y1={MARGIN.top} y2={MARGIN.top + plotHeight} />
-              <text x={c.centre(today)} y={MARGIN.top - 8} text-anchor="middle">Today</text>
+              <text x={c.centre(today)} y={MARGIN.top - 8} text-anchor="middle">
+                Today
+              </text>
             </g>
           )}
           {markers.map(({ i, text, title }) =>
@@ -98,25 +133,35 @@ export function DaylightChart({ rows, today, hover, setHover, timeZone, locale }
             </text>
           ))}
           {ticks.map((t) => (
-            <text key={t.i} class="tick" x={c.left(t.i)} y={HEIGHT - 8} text-anchor="start">{t.label}</text>
+            <text key={t.i} class="tick" x={c.left(t.i)} y={HEIGHT - 8} text-anchor="start">
+              {t.label}
+            </text>
           ))}
           {hover !== null && (
-            <line class="crosshair" x1={c.centre(hover)} x2={c.centre(hover)} y1={MARGIN.top} y2={MARGIN.top + plotHeight} />
+            <line
+              class="crosshair"
+              x1={c.centre(hover)}
+              x2={c.centre(hover)}
+              y1={MARGIN.top}
+              y2={MARGIN.top + plotHeight}
+            />
           )}
         </svg>
         {row && hover !== null && (
-          <div
-            class="tooltip"
-            style={tooltipStyle(c.centre(hover), width, MARGIN.top)}
-          >
-            <div class="tip-date">{formatDate(row.date, locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
+          <div class="tooltip" style={tooltipStyle(c.centre(hover), width, MARGIN.top)}>
+            <div class="tip-date">{formatDate(row.date, locale, LONG_DATE)}</div>
             <div class="tip-headline">
               <strong>{formatDuration(row.dayLength)}</strong> daylight
               {hover > 0 && <span class="muted"> {formatDelta(row.dayLength - rows[hover - 1].dayLength)}</span>}
             </div>
             <CrossingTimes row={row} timeZone={timeZone} locale={locale} />
             {row.season && <div class="tip-note">{row.season}</div>}
-            {row.clockChange !== 0 && <div class="tip-note">Clocks went {row.clockChange > 0 ? 'forward' : 'back'} {formatDuration(Math.abs(row.clockChange)).replace(/^0h /, '').replace(/ 00m$/, '')}</div>}
+            {row.clockChange !== 0 && (
+              <div class="tip-note">
+                Clocks went {row.clockChange > 0 ? 'forward' : 'back'}{' '}
+                {formatDuration(Math.abs(row.clockChange)).replace(/^0h /, '').replace(/ 00m$/, '')}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -131,7 +176,7 @@ type Rect = [number, number, number, number];
  * and per-day rectangles where it can't (polar days, twilight wrapping past
  * midnight). Runs break where the clocks change, leaving an honest step.
  */
-function bandShapes(rows: DayRow[], level: Level, c: Columns, y: (m: number) => number) {
+function bandShapes(rows: DayRow[], level: Level, c: Columns) {
   const rects: Rect[] = [];
   let path = '';
   let run: number[] = [];
@@ -166,7 +211,7 @@ function bandShapes(rows: DayRow[], level: Level, c: Columns, y: (m: number) => 
   return { rects, path };
 }
 
-function sunLines(rows: DayRow[], c: Columns, y: (m: number) => number): string {
+function sunLines(rows: DayRow[], c: Columns): string {
   const parts: string[] = [];
   for (const edge of ['riseMin', 'setMin'] as const) {
     let pen = false;

@@ -48,6 +48,8 @@ The full set is about 237,000 places and takes half a minute to load.
 
     pnpm test              # sun maths, time zones, normalisation, URLs
     pnpm check             # TypeScript
+    pnpm lint:check        # oxlint (lint:fix to fix what it can)
+    pnpm format:check      # oxfmt (format:fix to format); it skips .astro files for now
     pnpm preview           # production build in workerd, on :8787
 
 ## Deploying

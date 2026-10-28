@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "react", "jsx-a11y", "vitest"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "rules": {
+    // Preact with the automatic JSX runtime: nothing needs importing
+    "react/react-in-jsx-scope": "off",
+    // Suggests <img> for an SVG chart and <select> for a combobox's listbox,
+    // neither of which would work
+    "jsx-a11y/prefer-tag-over-role": "off",
+    // The ARIA combobox pattern: a listbox of options
+    "jsx-a11y/no-noninteractive-element-to-interactive-role": ["error", { "ul": ["listbox"], "li": ["option"] }]
+  },
+  "env": {
+    "builtin": true,
+    "browser": true
+  }
+}

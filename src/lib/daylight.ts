@@ -45,9 +45,11 @@ export function daylightRows(place: Location, from: IsoDate, to: IsoDate): DayRo
     const near = Date.UTC(y, m - 1, d, 12) - (place.lng / 15) * 3_600_000;
     const sun = solarDay(near, place.lat, place.lng);
     const offset = offsetMinutes(sun.noon, place.timeZone);
-    const minutes = (ms: number) => (ms - sun.noon) / 60_000 + minuteOfDay(sun.noon, place.timeZone)
+    const minutes = (ms: number) =>
+      (ms - sun.noon) / 60_000 +
+      minuteOfDay(sun.noon, place.timeZone) +
       // Clocks may change between noon and the event
-      + (offsetMinutes(ms, place.timeZone) - offset);
+      (offsetMinutes(ms, place.timeZone) - offset);
 
     const crossings = {} as Record<Level, LocalCrossing>;
     for (const level of LEVELS) {

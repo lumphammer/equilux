@@ -108,14 +108,15 @@ export function subsolarPoint(ms: number): { lat: number; lng: number } {
 export type SeasonEvent = 'March equinox' | 'June solstice' | 'September equinox' | 'December solstice';
 const SEASONS: SeasonEvent[] = ['March equinox', 'June solstice', 'September equinox', 'December solstice'];
 
+/** The sun's ecliptic longitude, measured from the March equinox, in quarter turns. */
+function quarter(ms: number): number {
+  const d = toDays(ms);
+  const turns = eclipticLongitude(meanAnomaly(d), d) / (2 * Math.PI);
+  return (((turns % 1) + 1) % 1) * 4;
+}
+
 /** Equinoxes and solstices in a year, to within a quarter of an hour or so. */
 export function seasons(year: number): { event: SeasonEvent; at: number }[] {
-  // Sun's ecliptic longitude measured from the March equinox, in quarter turns
-  const quarter = (ms: number) => {
-    const d = toDays(ms);
-    const turns = eclipticLongitude(meanAnomaly(d), d) / (2 * Math.PI);
-    return (((turns % 1) + 1) % 1) * 4;
-  };
   const found: { event: SeasonEvent; at: number }[] = [];
   const start = Date.UTC(year, 0, 1);
   const end = Date.UTC(year + 1, 0, 1);

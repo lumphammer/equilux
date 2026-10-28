@@ -5,7 +5,8 @@ import { seasons } from '../src/lib/sun.ts';
 import { addMonths, nauticalTimeZone, offsetMinutes } from '../src/lib/tz.ts';
 
 const london = { lat: 51.50853, lng: -0.12574, timeZone: 'Europe/London' };
-const hhmm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
+const hhmm = (m: number) =>
+  `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
 const riseSet = (row: ReturnType<typeof daylightRows>[number]) => {
   const c = row.crossings.day;
   if (typeof c === 'string') return c;
@@ -46,7 +47,10 @@ describe('daylight', () => {
   });
 
   it('wraps late twilight across midnight', () => {
-    expect(intervals({ rise: 0, set: 0, riseMin: 100, setMin: 1500 })).toEqual([[100, 1440], [0, 60]]);
+    expect(intervals({ rise: 0, set: 0, riseMin: 100, setMin: 1500 })).toEqual([
+      [100, 1440],
+      [0, 60],
+    ]);
   });
 
   it('marks solstices and equinoxes', () => {
@@ -73,12 +77,19 @@ describe('urls', async () => {
 
   it('makes stable place paths', () => {
     expect(slug('Saint-Étienne-du-Rouvray')).toBe('saint-etienne-du-rouvray');
-    expect(placePath({ id: 2643743, name: 'London', label: '', lat: 0, lng: 0, timeZone: 'UTC' })).toBe('/place/2643743/london');
-    expect(placePath({ name: 'x', label: '', lat: 51.48, lng: -0.0012345, timeZone: 'UTC' })).toBe('/at/51.4800,-0.0012');
+    expect(placePath({ id: 2643743, name: 'London', label: '', lat: 0, lng: 0, timeZone: 'UTC' })).toBe(
+      '/place/2643743/london',
+    );
+    expect(placePath({ name: 'x', label: '', lat: 51.48, lng: -0.0012345, timeZone: 'UTC' })).toBe(
+      '/at/51.4800,-0.0012',
+    );
   });
 
   it('round-trips ranges', () => {
-    expect(resolveRange(rangeFromParams(new URLSearchParams('range=30d')), '2026-03-15')).toEqual(['2026-02-13', '2026-04-14']);
+    expect(resolveRange(rangeFromParams(new URLSearchParams('range=30d')), '2026-03-15')).toEqual([
+      '2026-02-13',
+      '2026-04-14',
+    ]);
     expect(resolveRange({ preset: 'next12m' }, '2026-03-15')).toEqual(['2026-03-15', '2027-03-14']);
     expect(rangeFromParams(new URLSearchParams('from=2026-01-01&to=2025-01-01'))).toEqual({ preset: '6m' });
     expect(rangeToParams({ from: '2026-01-01', to: '2026-02-01' })).toBe('?from=2026-01-01&to=2026-02-01');

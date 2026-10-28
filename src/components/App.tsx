@@ -2,7 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
 import { daylightRows } from '../lib/daylight.ts';
 import { formatTimeZoneName } from '../lib/format.ts';
 import { formatCoordinates, type Place, placePath, slug } from '../lib/place.ts';
-import { MAX_DAYS, PRESETS, type PresetKey, type Range, rangeFromParams, rangeToParams, resolveRange } from '../lib/ranges.ts';
+import {
+  MAX_DAYS,
+  PRESETS,
+  type PresetKey,
+  type Range,
+  rangeFromParams,
+  rangeToParams,
+  resolveRange,
+} from '../lib/ranges.ts';
 import { addDays, daysBetween, type IsoDate, localDate } from '../lib/tz.ts';
 import { DayLengthChart } from './DayLengthChart.tsx';
 import { DaylightChart } from './DaylightChart.tsx';
@@ -23,6 +31,18 @@ interface Props {
 const RECENT_KEY = 'equilux:recent';
 type HistoryState = { place: Place };
 
+const pageUrl = (p: Place, r: Range) => placePath(p) + rangeToParams(r);
+
+/** The time, updated every minute, so "today" moves on at midnight. */
+function useNow() {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
+  return now;
+}
+
 export default function App({ initial, guessed, initialRange, locale }: Props) {
   const [place, setPlace] = useState(initial);
   const [isGuess, setIsGuess] = useState(!!guessed);
@@ -31,21 +51,21 @@ export default function App({ initial, guessed, initialRange, locale }: Props) {
   const [recent, setRecent] = useState<Place[]>([]);
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState('');
+  const now = useNow();
 
-  const today = localDate(Date.now(), place.timeZone);
+  const today = localDate(now, place.timeZone);
   const [from, to] = resolveRange(range, today);
   const rows = useMemo(() => daylightRows(place, from, to), [place, from, to]);
   const around = useMemo(() => daylightRows(place, addDays(today, -1), addDays(today, 1)), [place, today]);
   const todayIndex = today >= from && today <= to ? daysBetween(from, today) : -1;
 
-  // Keep the URL shareable
-  const url = (p: Place, r: Range) => placePath(p) + rangeToParams(r);
+  // Keep the URL shareable, and the place in history for the back button.
+  // A guessed place keeps the plain home page URL.
   useEffect(() => {
-    if (!isGuess) history.replaceState({ place } satisfies HistoryState, '', url(place, range));
-  }, [range]);
+    history.replaceState({ place } satisfies HistoryState, '', isGuess ? undefined : pageUrl(place, range));
+  }, [place, range, isGuess]);
 
   useEffect(() => {
-    history.replaceState({ place } satisfies HistoryState, '');
     const onPop = (e: PopStateEvent) => {
       const state = e.state as HistoryState | null;
       if (state?.place) {
@@ -72,7 +92,7 @@ export default function App({ initial, guessed, initialRange, locale }: Props) {
       setIsGuess(false);
       setHover(null);
       setError('');
-      history.pushState({ place: next } satisfies HistoryState, '', url(next, range));
+      history.pushState({ place: next } satisfies HistoryState, '', pageUrl(next, range));
       setRecent((list) => {
         const key = placePath(next);
         const updated = [next, ...list.filter((p) => placePath(p) !== key)].slice(0, 6);
@@ -129,61 +149,117 @@ export default function App({ initial, guessed, initialRange, locale }: Props) {
           <nav class="recent" aria-label="Recent places">
             Recent:{' '}
             {recent.map((p) => (
-              <a key={placePath(p)} href={placePath(p)} onClick={(e) => { e.preventDefault(); go(p); }}>{p.name}</a>
+              <a
+                key={placePath(p)}
+                href={placePath(p)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  go(p);
+                }}
+              >
+                {p.name}
+              </a>
             ))}
           </nav>
         )}
-        {error && <p class="error" role="alert">{error}</p>}
+        {error && (
+          <p class="error" role="alert">
+            {error}
+          </p>
+        )}
         <MapView place={place} onPick={goToPoint} />
       </div>
 
-      <PlaceHeading place={place} guessed={isGuess} locale={locale} onNear={go} />
-      <Today place={place} today={today} days={around as [typeof rows[0], typeof rows[0], typeof rows[0]]} locale={locale} />
+      <PlaceHeading place={place} guessed={isGuess} now={now} locale={locale} onNear={go} />
+      <Today
+        place={place}
+        today={today}
+        days={around as [(typeof rows)[0], (typeof rows)[0], (typeof rows)[0]]}
+        locale={locale}
+      />
 
       <section class="charts" aria-label="Sunlight over time">
         <RangePicker range={range} setRange={setRange} from={from} to={to} />
-        <DaylightChart rows={rows} today={todayIndex} hover={hover} setHover={setHover} timeZone={place.timeZone} locale={locale} />
+        <DaylightChart
+          rows={rows}
+          today={todayIndex}
+          hover={hover}
+          setHover={setHover}
+          timeZone={place.timeZone}
+          locale={locale}
+        />
         <DayLengthChart rows={rows} today={todayIndex} hover={hover} setHover={setHover} locale={locale} />
-        <DayTable rows={rows} today={todayIndex} timeZone={place.timeZone} locale={locale}
-          fileName={`equilux-${slug(place.name) || 'place'}-${from}-to-${to}`} />
+        <DayTable
+          rows={rows}
+          today={todayIndex}
+          timeZone={place.timeZone}
+          locale={locale}
+          fileName={`equilux-${slug(place.name) || 'place'}-${from}-to-${to}`}
+        />
       </section>
     </div>
   );
 }
 
-function PlaceHeading({ place, guessed, locale, onNear }: { place: Place; guessed: boolean; locale: string; onNear: (p: Place) => void }) {
-  const zone = formatTimeZoneName(Date.now(), place.timeZone, locale);
+interface PlaceHeadingProps {
+  place: Place;
+  guessed: boolean;
+  now: number;
+  locale: string;
+  onNear: (p: Place) => void;
+}
+
+function PlaceHeading({ place, guessed, now, locale, onNear }: PlaceHeadingProps) {
+  const zone = formatTimeZoneName(now, place.timeZone, locale);
   const nautical = place.timeZone.startsWith('Etc/');
   return (
     <header class="place-heading">
       <h1>{place.id ? place.name : place.near && place.near.km < 1 ? place.name : 'A point on the map'}</h1>
       <p class="place-meta">
-        {place.id ? place.label.slice(place.name.length).replace(/^, /, '') || place.label : formatCoordinates(place.lat, place.lng)}
+        {place.id
+          ? place.label.slice(place.name.length).replace(/^, /, '') || place.label
+          : formatCoordinates(place.lat, place.lng)}
         {place.near && place.near.km >= 1 && (
           <>
             {' · '}
             {Math.round(place.near.km)} km from{' '}
-            <a href={`/place/${place.near.id}/${slug(place.near.label.split(',')[0])}`}
+            <a
+              href={`/place/${place.near.id}/${slug(place.near.label.split(',')[0])}`}
               onClick={(e) => {
                 e.preventDefault();
                 fetch(`/api/place/${place.near!.id}`)
                   .then((r) => r.json() as Promise<{ place: Place }>)
                   .then((d) => onNear(d.place));
-              }}>
+              }}
+            >
               {place.near.label}
             </a>
           </>
         )}
         {' · '}
-        <span title={place.timeZone}>{nautical ? `Nautical time, ${zone}` : `${place.timeZone.replaceAll('_', ' ')} (${zone})`}</span>
+        <span title={place.timeZone}>
+          {nautical ? `Nautical time, ${zone}` : `${place.timeZone.replaceAll('_', ' ')} (${zone})`}
+        </span>
         {place.population ? ` · Population ${place.population.toLocaleString(locale)}` : ''}
       </p>
-      {guessed && <p class="guess-note">We guessed this from your internet connection. Search or click the map if it’s wrong.</p>}
+      {guessed && (
+        <p class="guess-note">We guessed this from your internet connection. Search or click the map if it’s wrong.</p>
+      )}
     </header>
   );
 }
 
-function RangePicker({ range, setRange, from, to }: { range: Range; setRange: (r: Range) => void; from: IsoDate; to: IsoDate }) {
+function RangePicker({
+  range,
+  setRange,
+  from,
+  to,
+}: {
+  range: Range;
+  setRange: (r: Range) => void;
+  from: IsoDate;
+  to: IsoDate;
+}) {
   const custom = !('preset' in range);
   const setDates = (f: IsoDate, t: IsoDate) => {
     if (!f || !t) return;
@@ -192,7 +268,8 @@ function RangePicker({ range, setRange, from, to }: { range: Range; setRange: (r
     setRange({ from: f, to: t });
   };
   return (
-    <div class="range-picker" role="group" aria-label="Date range">
+    <fieldset class="range-picker">
+      <legend class="visually-hidden">Date range</legend>
       {(Object.keys(PRESETS) as PresetKey[]).map((key) => (
         <button
           key={key}
@@ -205,9 +282,13 @@ function RangePicker({ range, setRange, from, to }: { range: Range; setRange: (r
         </button>
       ))}
       <span class={`custom-range ${custom ? 'is-active' : ''}`}>
-        <label>From <input type="date" value={from} onChange={(e) => setDates((e.target as HTMLInputElement).value, to)} /></label>
-        <label>to <input type="date" value={to} onChange={(e) => setDates(from, (e.target as HTMLInputElement).value)} /></label>
+        <label>
+          From <input type="date" value={from} onChange={(e) => setDates((e.target as HTMLInputElement).value, to)} />
+        </label>
+        <label>
+          to <input type="date" value={to} onChange={(e) => setDates(from, (e.target as HTMLInputElement).value)} />
+        </label>
       </span>
-    </div>
+    </fieldset>
   );
 }

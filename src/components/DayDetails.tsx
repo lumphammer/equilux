@@ -27,7 +27,10 @@ export function CrossingTimes({ row, timeZone, locale }: { row: DayRow; timeZone
     <dl class="tip-rows">
       {items.map(([key, label, value]) => (
         <div key={label}>
-          <dt><span class={`line-key ${key}`} />{label}</dt>
+          <dt>
+            <span class={`line-key ${key}`} />
+            {label}
+          </dt>
           <dd>{value}</dd>
         </div>
       ))}

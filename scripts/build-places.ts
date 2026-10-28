@@ -28,9 +28,16 @@ const { values: opts } = parseArgs({
 });
 
 const tsv = (file: string): string[][] =>
-  readFileSync(file, 'utf8').split('\n').filter(Boolean).map((line: string) => line.split('\t'));
+  readFileSync(file, 'utf8')
+    .split('\n')
+    .filter(Boolean)
+    .map((line: string) => line.split('\t'));
 
-const countries = new Map(tsv(opts.countries).slice(1).map(([iso2, , , name]) => [iso2, name]));
+const countries = new Map(
+  tsv(opts.countries)
+    .slice(1)
+    .map(([iso2, , , name]) => [iso2, name]),
+);
 const regions = new Map(tsv(opts.admin1).map(([code, name]) => [code, name]));
 
 const sql = (v: string | number) => (typeof v === 'number' ? String(v) : `'${v.replaceAll("'", "''")}'`);
@@ -70,7 +77,11 @@ for await (const line of lines) {
   // Alternative names include other languages ("Londres"), other scripts
   // (which normalise to nothing) and codes (airports and the like)
   const seen = new Set<string>();
-  const all: [string, number][] = [[name, 0], [ascii, 0], ...alternates.split(',').map((a: string): [string, number] => [a, 1])];
+  const all: [string, number][] = [
+    [name, 0],
+    [ascii, 0],
+    ...alternates.split(',').map((a: string): [string, number] => [a, 1]),
+  ];
   for (const [alias, isAlias] of all) {
     const n = normalise(alias);
     if (!n || seen.has(n)) continue;

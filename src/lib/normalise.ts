@@ -3,11 +3,35 @@
 // become "saintetienne".
 
 const SPECIAL: Record<string, string> = {
-  ß: 'ss', Æ: 'AE', æ: 'ae', Ĳ: 'IJ', ĳ: 'ij', Œ: 'Oe', œ: 'oe',
-  Ð: 'D', Đ: 'D', ð: 'd', đ: 'd', Ħ: 'H', ħ: 'h',
-  ı: 'i', ĸ: 'k', Ŀ: 'L', Ł: 'L', ŀ: 'l', ł: 'l',
-  Ŋ: 'N', ŉ: 'n', ŋ: 'n', Ø: 'O', ø: 'o', ſ: 's',
-  Þ: 'T', Ŧ: 'T', þ: 't', ŧ: 't',
+  ß: 'ss',
+  Æ: 'AE',
+  æ: 'ae',
+  Ĳ: 'IJ',
+  ĳ: 'ij',
+  Œ: 'Oe',
+  œ: 'oe',
+  Ð: 'D',
+  Đ: 'D',
+  ð: 'd',
+  đ: 'd',
+  Ħ: 'H',
+  ħ: 'h',
+  ı: 'i',
+  ĸ: 'k',
+  Ŀ: 'L',
+  Ł: 'L',
+  ŀ: 'l',
+  ł: 'l',
+  Ŋ: 'N',
+  ŉ: 'n',
+  ŋ: 'n',
+  Ø: 'O',
+  ø: 'o',
+  ſ: 's',
+  Þ: 'T',
+  Ŧ: 'T',
+  þ: 't',
+  ŧ: 't',
 };
 const SPECIAL_RE = new RegExp(`[${Object.keys(SPECIAL).join('')}]`, 'g');
 
@@ -23,5 +47,7 @@ export function normalise(name: string): string {
 
 /** Looser still: doubled letters made single, vowels removed ("Manchster"). */
 export function normaliseLoose(name: string): string {
-  return normalise(name).replace(/(.)\1/g, '$1').replace(/[aeiou]/g, '');
+  return normalise(name)
+    .replace(/(.)\1/g, '$1')
+    .replace(/[aeiou]/g, '');
 }
