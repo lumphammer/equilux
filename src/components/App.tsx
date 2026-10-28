@@ -16,6 +16,7 @@ import { addDays, daysBetween, type IsoDate, localDate } from '../lib/tz.ts';
 import { DayLengthChart } from './DayLengthChart.tsx';
 import { DaylightChart } from './DaylightChart.tsx';
 import { DayTable } from './DayTable.tsx';
+import { Favourites } from './Favourites.tsx';
 import { MapView } from './MapView.tsx';
 import { SearchBox } from './SearchBox.tsx';
 import { Today } from './Today.tsx';
@@ -172,6 +173,7 @@ export default function App({ initial, guessed, initialRange, locale }: Props) {
             ))}
           </nav>
         )}
+        <Favourites place={place} onPick={go} />
         {error && (
           <p class="error" role="alert">
             {error}
