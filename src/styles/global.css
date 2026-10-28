@@ -631,3 +631,18 @@ tr.is-today {
       color 0.3s ease;
   }
 }
+
+.map:is(:fullscreen, .maplibregl-pseudo-fullscreen) {
+  border: 0;
+  border-radius: 0;
+}
+.map:is(:fullscreen, .maplibregl-pseudo-fullscreen) .maplibregl-ctrl-top-right {
+  top: env(safe-area-inset-top, 0px);
+  right: env(safe-area-inset-right, 0px);
+}
+@media (max-width: 640px), (pointer: coarse) {
+  .map .maplibregl-ctrl-group button {
+    width: 44px;
+    height: 44px;
+  }
+}

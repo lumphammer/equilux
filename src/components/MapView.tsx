@@ -58,6 +58,9 @@ export function MapView({ place, onPick, dark = false }: Props) {
         cooperativeGestures: true,
       });
       map.addControl(new maplibre.NavigationControl({ showCompass: false }), 'top-right');
+      // Falls back to filling the browser viewport when native fullscreen is unavailable (e.g. iPhone).
+      // Also allows one-finger panning while fullscreen, restoring cooperative gestures on exit.
+      map.addControl(new maplibre.FullscreenControl(), 'top-right');
       map.on('style.load', () => {
         map.addSource('night', { type: 'geojson', data: nightPolygon(Date.now()) });
         map.addLayer({
