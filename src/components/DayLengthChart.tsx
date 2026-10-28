@@ -1,5 +1,6 @@
 import { type DayRow } from '../lib/daylight.ts';
 import { formatDate, formatDelta, formatDuration } from '../lib/format.ts';
+import { EventMarkers } from './EventMarkers.tsx';
 import { chartSlider, columns, dateTicks, MARGIN, tooltipStyle, useWidth } from './chart.ts';
 
 const HEIGHT = 200;
@@ -55,7 +56,8 @@ export function DayLengthChart({ rows, today, hover, setHover, locale }: Props) 
             hover,
             setHover,
             today,
-            describe: (r) => `${formatDate(r.date, locale, LONG_DATE)}: ${formatDuration(r.dayLength)} of daylight`,
+            describe: (r) =>
+              `${formatDate(r.date, locale, LONG_DATE)}: ${formatDuration(r.dayLength)} of daylight${r.season ? `, ${r.season}` : ''}${r.equilux ? ', Equilux' : ''}`,
           })}
           onPointerMove={(e) => setHover(c.index(e.offsetX))}
           onPointerLeave={() => setHover(null)}
@@ -86,6 +88,7 @@ export function DayLengthChart({ rows, today, hover, setHover, locale }: Props) 
               <line x1={c.centre(today)} x2={c.centre(today)} y1={MARGIN.top} y2={MARGIN.top + plotHeight} />
             </g>
           )}
+          <EventMarkers rows={rows} c={c} plotHeight={plotHeight} today={today} locale={locale} />
           <path class="series-line" d={line} />
           {extremes.map(({ i, label }) => {
             const above = label === 'Longest';
@@ -116,6 +119,8 @@ export function DayLengthChart({ rows, today, hover, setHover, locale }: Props) 
         {row && hover !== null && (
           <div class="tooltip" style={tooltipStyle(c.centre(hover), width, MARGIN.top, 220)}>
             <div class="tip-date">{formatDate(row.date, locale, LONG_DATE)}</div>
+            {row.season && <div class="tip-note">{row.season}</div>}
+            {row.equilux && <div class="tip-note">Equilux · daylight closest to 12 hours</div>}
             <div class="tip-headline">
               <strong>{formatDuration(row.dayLength)}</strong>
               {hover > 0 && (

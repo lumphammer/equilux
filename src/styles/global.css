@@ -739,3 +739,25 @@ tr.is-today {
     min-height: 44px;
   }
 }
+
+.event-marker line {
+  stroke: var(--ink-2);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+}
+.event-marker.equilux line {
+  stroke: var(--accent);
+  stroke-dasharray: 6 3;
+}
+.event-markers-on-dark line {
+  stroke: #fff;
+  filter: drop-shadow(0 0 1px #000);
+}
+.event-markers-on-dark .equilux line {
+  stroke: #ffe09b;
+}
+.equilux-key {
+  border-color: #ffe09b;
+  border-top-style: dashed;
+  filter: drop-shadow(0 0 1px #000);
+}

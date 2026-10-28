@@ -30,6 +30,8 @@ export interface DayRow {
   /** The clocks changed since the previous day: minutes they moved by */
   clockChange: number;
   season?: SeasonEvent;
+  /** Nearest calendar day to a crossing of 12 hours of daylight. */
+  equilux?: boolean;
 }
 
 export function daylightRows(place: Location, from: IsoDate, to: IsoDate): DayRow[] {
@@ -38,7 +40,8 @@ export function daylightRows(place: Location, from: IsoDate, to: IsoDate): DayRo
   const events = seasonsByDate(place.timeZone, parseIsoDate(from)[0], parseIsoDate(to)[0]);
 
   let previousOffset: number | undefined;
-  for (let i = 0; i < count; i++) {
+  // Include neighbouring days so equilux detection is independent of the requested range.
+  for (let i = -1; i <= count; i++) {
     const date = addDays(from, i);
     const [y, m, d] = parseIsoDate(date);
     // Roughly local solar noon; picks the right solar day for any longitude
@@ -73,7 +76,18 @@ export function daylightRows(place: Location, from: IsoDate, to: IsoDate): DayRo
     });
     previousOffset = offset;
   }
-  return rows;
+  for (let i = 1; i < rows.length; i++) {
+    const a = rows[i - 1];
+    const b = rows[i];
+    if (typeof a.crossings.day !== 'object' || typeof b.crossings.day !== 'object') continue;
+    const before = a.dayLength - 720;
+    const after = b.dayLength - 720;
+    if ((before < 0 && after >= 0) || (before > 0 && after <= 0)) {
+      // A calendar date cannot usually have exactly 12 hours; choose the closer day.
+      (Math.abs(before) <= Math.abs(after) ? a : b).equilux = true;
+    }
+  }
+  return rows.slice(1, -1);
 }
 
 function seasonsByDate(timeZone: string, fromYear: number, toYear: number) {

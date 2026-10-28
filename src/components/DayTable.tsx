@@ -42,6 +42,7 @@ export function DayTable({ rows, today, timeZone, locale, fileName }: Props) {
               >
                 <th scope="row">
                   {formatDate(r.date, locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                  {r.equilux && <span class="row-note">Equilux</span>}
                   {r.season && <span class="row-note">{r.season}</span>}
                   {r.clockChange !== 0 && <span class="row-note">Clocks {r.clockChange > 0 ? 'forward' : 'back'}</span>}
                 </th>

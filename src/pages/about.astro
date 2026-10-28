@@ -15,7 +15,9 @@ cacheFor(Astro.response, 600);
       The equilux is the day when daylight and darkness are exactly equal. It isn’t the equinox: the
       atmosphere bends sunlight over the horizon, and sunrise counts from the top of the sun rather
       than its middle, so on the equinox itself the day is a few minutes longer than the night. The
-      equilux comes a few days before the March equinox and a few days after the September one.
+      equilux comes a few days before the March equinox and a few days after the September one in
+      the Northern Hemisphere; this is reversed in the Southern Hemisphere. Near the equator, daylight
+      can stay longer than 12 hours all year, so there is no equilux.
     </p>
 
     <h2>Reading the chart</h2>
@@ -23,7 +25,9 @@ cacheFor(Astro.response, 600);
       Each column is a day, from midnight at the bottom to midnight at the top, in local clock time.
       The lightest band is daylight; the bands around it are the three stages of twilight, darker as
       the sun sinks further below the horizon; the darkest is night. Where the clocks change, the bands
-      jump an hour.
+      jump an hour. Vertical dashed lines mark solstices, equinoxes, and the local equiluxes.
+      An equilux marker picks the calendar day closest to 12 hours of daylight where day length crosses
+      that threshold. Hover over a marker’s date to see its details.
     </p>
     <dl>
       <dt>Sunrise and sunset</dt>

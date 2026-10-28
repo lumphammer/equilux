@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import type { DayRow } from '../lib/daylight.ts';
 import { formatDate } from '../lib/format.ts';
 
-export const MARGIN = { left: 56, right: 14, top: 26, bottom: 28 };
+export const MARGIN = { left: 56, right: 14, top: 44, bottom: 28 };
 
 export function useWidth<T extends HTMLElement>(fallback = 800) {
   const ref = useRef<T>(null);

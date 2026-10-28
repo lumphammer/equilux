@@ -3,6 +3,7 @@ import { type DayRow, intervals } from '../lib/daylight.ts';
 import { formatClock, formatDate, formatDelta, formatDuration } from '../lib/format.ts';
 import type { Level } from '../lib/sun.ts';
 import { chartSlider, type Columns, columns, dateTicks, MARGIN, tooltipStyle, useWidth } from './chart.ts';
+import { EventMarkers } from './EventMarkers.tsx';
 import { CrossingTimes, spanText } from './DayDetails.tsx';
 
 const HEIGHT = 380;
@@ -36,9 +37,6 @@ export function DaylightChart({ rows, today, hover, setHover, timeZone, locale }
   const bands = useMemo(() => BANDS.map((b) => ({ ...b, shapes: bandShapes(rows, b.level, c) })), [rows, c]);
   const sunLine = useMemo(() => sunLines(rows, c), [rows, c]);
   const ticks = dateTicks(rows, c, locale);
-  const markers = rows.flatMap((r, i) =>
-    r.season ? [{ i, text: r.season.includes('solstice') ? 'Solstice' : 'Equinox', title: r.season }] : [],
-  );
   const changes = rows.flatMap((r, i) => (r.clockChange ? [{ i, change: r.clockChange }] : []));
 
   const row = hover !== null ? rows[hover] : null;
@@ -59,6 +57,10 @@ export function DaylightChart({ rows, today, hover, setHover, timeZone, locale }
             Night
           </li>
           <li>
+            <span class="line-key equilux-key" />
+            Equilux
+          </li>
+          <li>
             <span class="line-key sun" />
             Sunrise and sunset
           </li>
@@ -75,7 +77,7 @@ export function DaylightChart({ rows, today, hover, setHover, timeZone, locale }
             setHover,
             today,
             describe: (r) =>
-              `${formatDate(r.date, locale, LONG_DATE)}: sunrise to sunset ${spanText(r.crossings.day, timeZone, locale)}, ${formatDuration(r.dayLength)} of daylight`,
+              `${formatDate(r.date, locale, LONG_DATE)}: sunrise to sunset ${spanText(r.crossings.day, timeZone, locale)}, ${formatDuration(r.dayLength)} of daylight${r.season ? `, ${r.season}` : ''}${r.equilux ? ', Equilux' : ''}`,
           })}
           onPointerMove={(e) => setHover(c.index(e.offsetX))}
           onPointerLeave={() => setHover(null)}
@@ -119,14 +121,7 @@ export function DaylightChart({ rows, today, hover, setHover, timeZone, locale }
               </text>
             </g>
           )}
-          {markers.map(({ i, text, title }) =>
-            Math.abs(c.centre(i) - c.centre(today)) < 44 && today >= 0 ? null : (
-              <text key={i} class="marker" x={c.centre(i)} y={MARGIN.top - 8} text-anchor="middle">
-                <title>{title}</title>
-                {text}
-              </text>
-            ),
-          )}
+          <EventMarkers rows={rows} c={c} plotHeight={plotHeight} today={today} locale={locale} onDark />
           {[0, 3, 6, 9, 12, 15, 18, 21, 24].map((h) => (
             <text key={h} class="tick" x={MARGIN.left - 8} y={y(h * 60)} dy="0.32em" text-anchor="end">
               {formatClock(h * 60, locale)}
@@ -155,6 +150,7 @@ export function DaylightChart({ rows, today, hover, setHover, timeZone, locale }
               {hover > 0 && <span class="muted"> {formatDelta(row.dayLength - rows[hover - 1].dayLength)}</span>}
             </div>
             <CrossingTimes row={row} timeZone={timeZone} locale={locale} />
+            {row.equilux && <div class="tip-note">Equilux · daylight closest to 12 hours</div>}
             {row.season && <div class="tip-note">{row.season}</div>}
             {row.clockChange !== 0 && (
               <div class="tip-note">
