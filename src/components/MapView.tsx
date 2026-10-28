@@ -12,6 +12,7 @@ import { subsolarPoint } from '../lib/sun.ts';
 
 interface Props {
   place: Place | null;
+  dark?: boolean;
   onPick: (lat: number, lng: number) => void;
 }
 
@@ -24,9 +25,14 @@ const STYLES = {
  * The map: click anywhere to see sunlight there. Shades where it's night
  * right now. MapLibre is big, so it loads after the rest of the page.
  */
-export function MapView({ place, onPick }: Props) {
+export function MapView({ place, onPick, dark = false }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<{ map: MapLibreMap; marker: Marker } | null>(null);
+  const styleRef = useRef(dark);
+  const darkRef = useRef(dark);
+  useEffect(() => {
+    darkRef.current = dark;
+  }, [dark]);
   // Where the map starts; later places move it rather than recreate it
   const [start] = useState(() =>
     place
@@ -42,24 +48,29 @@ export function MapView({ place, onPick }: Props) {
       const maplibre = await import('maplibre-gl');
       maplibre.setWorkerUrl(workerUrl);
       if (cancelled || !container.current) return;
-      const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = darkRef.current;
+      styleRef.current = isDark;
       const map = new maplibre.Map({
         container: container.current,
-        style: dark ? STYLES.dark : STYLES.light,
+        style: isDark ? STYLES.dark : STYLES.light,
         ...start,
         attributionControl: { compact: true },
         cooperativeGestures: true,
       });
       map.addControl(new maplibre.NavigationControl({ showCompass: false }), 'top-right');
-      map.on('load', () => {
+      map.on('style.load', () => {
         map.addSource('night', { type: 'geojson', data: nightPolygon(Date.now()) });
         map.addLayer({
           id: 'night',
           type: 'fill',
           source: 'night',
-          paint: { 'fill-color': '#0d366b', 'fill-opacity': dark ? 0.35 : 0.18 },
+          paint: { 'fill-color': '#0d366b', 'fill-opacity': darkRef.current ? 0.35 : 0.18 },
         });
-        timer = setInterval(() => (map.getSource('night') as GeoJSONSource).setData(nightPolygon(Date.now())), 60_000);
+        clearInterval(timer);
+        timer = setInterval(
+          () => (map.getSource('night') as GeoJSONSource | undefined)?.setData(nightPolygon(Date.now())),
+          60_000,
+        );
       });
       created = map;
       setView({ map, marker: new maplibre.Marker({ color: '#eb6834' }) });
@@ -70,6 +81,13 @@ export function MapView({ place, onPick }: Props) {
       created?.remove();
     };
   }, [start]);
+
+  useEffect(() => {
+    if (view && styleRef.current !== dark) {
+      styleRef.current = dark;
+      view.map.setStyle(dark ? STYLES.dark : STYLES.light);
+    }
+  }, [view, dark]);
 
   useEffect(() => {
     if (!view) return;

@@ -8,6 +8,7 @@ import { formatTime } from '../lib/format.ts';
 import { requestLocale } from '../lib/locale.ts';
 import { type Place, placePath } from '../lib/place.ts';
 import { rangeFromParams } from '../lib/ranges.ts';
+import { solarTheme } from '../lib/theme.ts';
 import { localDate } from '../lib/tz.ts';
 
 interface Props {
@@ -25,6 +26,6 @@ const summary =
     : sun === 'up' ? 'The sun doesn’t set today' : 'The sun doesn’t rise today';
 const title = guessed ? 'Equilux: sunrise and sunset times, anywhere' : `Sunrise and sunset in ${place.name} · Equilux`;
 ---
-<Base title={title} description={`${summary} in ${place.label}. Sunrise, sunset and twilight times charted over the year.`} canonical={guessed ? '/' : placePath(place)}>
+<Base theme={solarTheme(place, Date.now())} title={title} description={`${summary} in ${place.label}. Sunrise, sunset and twilight times charted over the year.`} canonical={guessed ? '/' : placePath(place)}>
   <App client:load initial={place} guessed={guessed} initialRange={rangeFromParams(Astro.url.searchParams)} locale={locale} />
 </Base>

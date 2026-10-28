@@ -1,17 +1,17 @@
 :root {
   color-scheme: light;
-  --page: #f9f9f7;
-  --surface: #fcfcfb;
+  --page: #7ec9ff;
+  --surface: #e0f2ff;
   --ink: #0b0b0b;
   --ink-2: #52514e;
   --muted: #6f6d68;
   --hairline: #e1e0d9;
   --axis: #c3c2b7;
   --border: rgba(11, 11, 11, 0.1);
-  --accent: #c2410c;
+  --accent: #8b2f12;
   --sun: #eb6834;
   --series: #2a78d6;
-  --focus: #2a78d6;
+  --focus: #075399;
   /* Sky, light to dark: an ordinal ramp, validated against the surface */
   --band-day: #86b6ef;
   --band-civil: #3987e5;
@@ -24,27 +24,25 @@
   background: var(--page);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --page: #0d0d0d;
-    --surface: #1a1a19;
-    --ink: #f0efec;
-    --ink-2: #c3c2b7;
-    --muted: #989690;
-    --hairline: #2c2c2a;
-    --axis: #383835;
-    --border: rgba(255, 255, 255, 0.1);
-    --accent: #f59e6b;
-    --sun: #d95926;
-    --series: #3987e5;
-    --focus: #6da7ec;
-    --band-day: #b7d3f6;
-    --band-civil: #6da7ec;
-    --band-nautical: #3987e5;
-    --band-astronomical: #256abf;
-    --band-night: #184f95;
-  }
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --ink: #f0efec;
+  --ink-2: #c3c2b7;
+  --muted: #989690;
+  --hairline: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.1);
+  --accent: #f59e6b;
+  --sun: #d95926;
+  --series: #3987e5;
+  --focus: #6da7ec;
+  --band-day: #b7d3f6;
+  --band-civil: #6da7ec;
+  --band-nautical: #3987e5;
+  --band-astronomical: #256abf;
+  --band-night: #184f95;
 }
 
 * {
@@ -623,5 +621,13 @@ tr.is-today {
   }
   .chart {
     padding: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root {
+    transition:
+      background-color 2s ease,
+      color 0.3s ease;
   }
 }

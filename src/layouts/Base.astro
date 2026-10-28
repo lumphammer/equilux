@@ -1,15 +1,17 @@
 ---
 import '../styles/global.css';
+import type { solarTheme } from '../lib/theme.ts';
 
 interface Props {
+  theme?: ReturnType<typeof solarTheme>;
   title: string;
   description?: string;
   canonical?: string;
 }
-const { title, description = 'Sunrise, sunset and twilight times anywhere in the world, charted over the year.', canonical } = Astro.props;
+const { theme, title, description = 'Sunrise, sunset and twilight times anywhere in the world, charted over the year.', canonical } = Astro.props;
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme={theme?.mode} style={theme && Object.entries(theme.variables).map(([name, value]) => `${name}:${value}`).join(';')}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -18,7 +20,7 @@ const { title, description = 'Sunrise, sunset and twilight times anywhere in the
     {canonical && <link rel="canonical" href={new URL(canonical, Astro.url)} />}
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta name="color-scheme" content="light dark" />
+    <meta name="color-scheme" content={theme?.mode ?? 'light'} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
   <body>

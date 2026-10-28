@@ -11,6 +11,7 @@ import {
   rangeToParams,
   resolveRange,
 } from '../lib/ranges.ts';
+import { applySolarTheme, solarTheme } from '../lib/theme.ts';
 import { addDays, daysBetween, type IsoDate, localDate } from '../lib/tz.ts';
 import { DayLengthChart } from './DayLengthChart.tsx';
 import { DaylightChart } from './DaylightChart.tsx';
@@ -37,8 +38,14 @@ const pageUrl = (p: Place, r: Range) => placePath(p) + rangeToParams(r);
 function useNow() {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(timer);
+    const update = () => setNow(Date.now());
+    const timer = setInterval(update, 60_000);
+    // Background tabs can throttle timers; catch up as soon as the page returns.
+    document.addEventListener('visibilitychange', update);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', update);
+    };
   }, []);
   return now;
 }
@@ -52,6 +59,9 @@ export default function App({ initial, guessed, initialRange, locale }: Props) {
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState('');
   const now = useNow();
+  const theme = useMemo(() => solarTheme(place, now), [place, now]);
+
+  useEffect(() => applySolarTheme(theme), [theme]);
 
   const today = localDate(now, place.timeZone);
   const [from, to] = resolveRange(range, today);
@@ -167,7 +177,7 @@ export default function App({ initial, guessed, initialRange, locale }: Props) {
             {error}
           </p>
         )}
-        <MapView place={place} onPick={goToPoint} />
+        <MapView place={place} onPick={goToPoint} dark={theme.mode === 'dark'} />
       </div>
 
       <PlaceHeading place={place} guessed={isGuess} now={now} locale={locale} onNear={go} />
