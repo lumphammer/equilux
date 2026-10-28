@@ -66,17 +66,18 @@ export function Today({ place, today, now, days: [yesterday, day, tomorrow], loc
       <ul class="facts">
         {previous && (
           <li>
-            {previous.name} was {eventDuration(now - previous.at)} ago.
+            <b>{previous.name}</b> was <b>{eventDuration(now - previous.at)}</b> ago.
           </li>
         )}
         {next && (
           <li>
-            {next.name} is in {eventDuration(next.at - now)}.
+            <b>{next.name}</b> is in <b>{eventDuration(next.at - now)}</b>.
           </li>
         )}
         {trend !== 0 && sun !== 'up' && sun !== 'down' && (
           <li>
-            Days are getting {trend > 0 ? 'longer' : 'shorter'}, by {formatDelta(trend).slice(1)} tomorrow.
+            Days are getting <b>{trend > 0 ? 'longer' : 'shorter'}</b>, by <b>{formatDelta(trend).slice(1)}</b>{' '}
+            tomorrow.
           </li>
         )}
         <NextSeason today={today} timeZone={tz} locale={locale} />
@@ -117,7 +118,7 @@ function NextSeason({ today, timeZone, locale }: { today: IsoDate; timeZone: str
   const days = daysBetween(today, next.date);
   return (
     <li>
-      The {next.event} is {days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`}, at{' '}
+      The <b>{next.event}</b> is <b>{days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`}</b>, at{' '}
       {formatTime(next.at, timeZone, locale)} on {formatDate(next.date, locale, { day: 'numeric', month: 'long' })}.
     </li>
   );
@@ -133,8 +134,8 @@ function NextClockChange({ today, timeZone, locale }: { today: IsoDate; timeZone
       const amount = Math.abs(diff) === 60 ? 'an hour' : formatDuration(Math.abs(diff));
       return (
         <li>
-          The clocks go {diff > 0 ? 'forward' : 'back'} {amount} {i === 1 ? 'tonight' : `in ${i} days`}, on{' '}
-          {formatDate(date, locale, { weekday: 'long', day: 'numeric', month: 'long' })}.
+          The <b>clocks go {diff > 0 ? 'forward' : 'back'}</b> {amount} <b>{i === 1 ? 'tonight' : `in ${i} days`}</b>,
+          on {formatDate(date, locale, { weekday: 'long', day: 'numeric', month: 'long' })}.
         </li>
       );
     }
