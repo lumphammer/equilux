@@ -1,19 +1,25 @@
+import { useMemo } from 'preact/hooks';
 import type { DayRow, LocalCrossing } from '../lib/daylight.ts';
 import { compass, formatDate, formatDelta, formatDuration, formatTime } from '../lib/format.ts';
 import type { Place } from '../lib/place.ts';
-import { seasons } from '../lib/sun.ts';
+import { seasons, surroundingSunEvents } from '../lib/sun.ts';
 import { addDays, daysBetween, type IsoDate, localDate, offsetMinutes, utcNoon } from '../lib/tz.ts';
 import { crossingText } from './DayDetails.tsx';
 
 interface Props {
   place: Place;
   today: IsoDate;
+  now: number;
   /** Yesterday, today and tomorrow */
   days: [DayRow, DayRow, DayRow];
   locale: string;
 }
 
-export function Today({ place, today, days: [yesterday, day, tomorrow], locale }: Props) {
+export function Today({ place, today, now, days: [yesterday, day, tomorrow], locale }: Props) {
+  const { previous, next } = useMemo(
+    () => surroundingSunEvents(now, place.lat, place.lng),
+    [now, place.lat, place.lng],
+  );
   const tz = place.timeZone;
   const time = (ms: number) => formatTime(ms, tz, locale);
   const sun = day.crossings.day;
@@ -58,6 +64,16 @@ export function Today({ place, today, days: [yesterday, day, tomorrow], locale }
         <Tile label="Golden hour" {...goldenHour(golden, sun, time)} />
       </div>
       <ul class="facts">
+        {previous && (
+          <li>
+            {previous.name} was {eventDuration(now - previous.at)} ago.
+          </li>
+        )}
+        {next && (
+          <li>
+            {next.name} is in {eventDuration(next.at - now)}.
+          </li>
+        )}
         {trend !== 0 && sun !== 'up' && sun !== 'down' && (
           <li>
             Days are getting {trend > 0 ? 'longer' : 'shorter'}, by {formatDelta(trend).slice(1)} tomorrow.
@@ -68,6 +84,12 @@ export function Today({ place, today, days: [yesterday, day, tomorrow], locale }
       </ul>
     </section>
   );
+}
+
+function eventDuration(ms: number) {
+  const minutes = Math.round(ms / 60_000);
+  const days = Math.floor(minutes / 1440);
+  return days ? `${days}d ${formatDuration(minutes % 1440)}` : formatDuration(minutes);
 }
 
 function Tile({ label, value, note }: { label: string; value: string; note?: string }) {

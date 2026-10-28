@@ -184,6 +184,7 @@ export default function App({ initial, guessed, initialRange, locale }: Props) {
       <Today
         place={place}
         today={today}
+        now={now}
         days={around as [(typeof rows)[0], (typeof rows)[0], (typeof rows)[0]]}
         locale={locale}
       />

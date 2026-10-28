@@ -138,3 +138,31 @@ export function seasons(year: number): { event: SeasonEvent; at: number }[] {
   }
   return found;
 }
+
+/** Nearest sunrise or sunset on either side of an instant, including polar seasons. */
+export function surroundingSunEvents(ms: number, lat: number, lng: number) {
+  type Event = { name: 'Sunrise' | 'Sunset'; at: number };
+  const current = solarDay(ms, lat, lng).crossings.day;
+  const isDay = current === 'up' || (typeof current === 'object' && ms >= current.rise && ms < current.set);
+  const previousName = isDay ? 'Sunrise' : 'Sunset';
+  const nextName = isDay ? 'Sunset' : 'Sunrise';
+  let previous: Event | undefined;
+  let next: Event | undefined;
+  // Looking a year in either direction also covers months of polar day/night.
+  for (let offset = 0; offset <= 370; offset++) {
+    for (const direction of offset === 0 ? [0] : [-offset, offset]) {
+      const crossing = solarDay(ms + direction * DAY_MS, lat, lng).crossings.day;
+      if (typeof crossing === 'string') continue;
+      for (const event of [
+        { name: 'Sunrise', at: crossing.rise },
+        { name: 'Sunset', at: crossing.set },
+      ] as const) {
+        if (event.name === previousName && event.at <= ms && (!previous || event.at > previous.at)) previous = event;
+        if (event.name === nextName && event.at > ms && (!next || event.at < next.at)) next = event;
+      }
+    }
+    // Include the adjacent solar days, even if today's two events bracket ms.
+    if (offset >= 1 && previous && next) break;
+  }
+  return { previous, next };
+}
