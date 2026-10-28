@@ -1,4 +1,10 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
+// Static, so the page links it: importing it dynamically alongside the
+// library leaves the client bundle preloading a CSS file that's never built
+import 'maplibre-gl/dist/maplibre-gl.css';
+// MapLibre looks for its worker beside its own script, which bundling
+// moves; have the build emit the worker and say where it went
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import type { Feature, Polygon } from 'geojson';
 import type { GeoJSONSource, Map as MapLibreMap, MapMouseEvent, Marker } from 'maplibre-gl';
 import type { Place } from '../lib/place.ts';
@@ -30,7 +36,8 @@ export function MapView({ place, onPick }: Props) {
     let cancelled = false;
     let timer: ReturnType<typeof setInterval> | undefined;
     (async () => {
-      const [maplibre] = await Promise.all([import('maplibre-gl'), import('maplibre-gl/dist/maplibre-gl.css')]);
+      const maplibre = await import('maplibre-gl');
+      maplibre.setWorkerUrl(workerUrl);
       if (cancelled || !container.current) return;
       const dark = matchMedia('(prefers-color-scheme: dark)').matches;
       const m = new maplibre.Map({
