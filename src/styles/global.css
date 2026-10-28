@@ -630,6 +630,9 @@ tr.is-today {
       background-color 2s ease,
       color 0.3s ease;
   }
+  .map-night-overlay {
+    transition: fill 2s ease;
+  }
 }
 
 .map:is(:fullscreen, .maplibregl-pseudo-fullscreen) {
@@ -645,4 +648,23 @@ tr.is-today {
     width: 44px;
     height: 44px;
   }
+}
+
+/* Blend only with the map canvas, keeping page colours out of the result. */
+.map .maplibregl-canvas-container {
+  isolation: isolate;
+}
+.map-night-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  fill: var(--page);
+  opacity: 0.18;
+}
+.map[data-dark='true'] .map-night-overlay {
+  mix-blend-mode: color;
+  opacity: 0.5;
 }

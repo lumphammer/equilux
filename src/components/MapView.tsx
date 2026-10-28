@@ -5,10 +5,9 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 // MapLibre looks for its worker beside its own script, which bundling
 // moves; have the build emit the worker and say where it went
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
-import type { Feature, Polygon } from 'geojson';
-import type { GeoJSONSource, Map as MapLibreMap, MapMouseEvent, Marker } from 'maplibre-gl';
+import type { Map as MapLibreMap, MapMouseEvent, Marker } from 'maplibre-gl';
 import type { Place } from '../lib/place.ts';
-import { subsolarPoint } from '../lib/sun.ts';
+import { addNightOverlay } from '../lib/night-overlay.ts';
 
 interface Props {
   place: Place | null;
@@ -43,7 +42,7 @@ export function MapView({ place, onPick, dark = false }: Props) {
   useEffect(() => {
     let cancelled = false;
     let created: MapLibreMap | undefined;
-    let timer: ReturnType<typeof setInterval> | undefined;
+    let removeNightOverlay: (() => void) | undefined;
     (async () => {
       const maplibre = await import('maplibre-gl');
       maplibre.setWorkerUrl(workerUrl);
@@ -61,26 +60,13 @@ export function MapView({ place, onPick, dark = false }: Props) {
       // Falls back to filling the browser viewport when native fullscreen is unavailable (e.g. iPhone).
       // Also allows one-finger panning while fullscreen, restoring cooperative gestures on exit.
       map.addControl(new maplibre.FullscreenControl(), 'top-right');
-      map.on('style.load', () => {
-        map.addSource('night', { type: 'geojson', data: nightPolygon(Date.now()) });
-        map.addLayer({
-          id: 'night',
-          type: 'fill',
-          source: 'night',
-          paint: { 'fill-color': '#0d366b', 'fill-opacity': darkRef.current ? 0.35 : 0.18 },
-        });
-        clearInterval(timer);
-        timer = setInterval(
-          () => (map.getSource('night') as GeoJSONSource | undefined)?.setData(nightPolygon(Date.now())),
-          60_000,
-        );
-      });
+      removeNightOverlay = addNightOverlay(map);
       created = map;
       setView({ map, marker: new maplibre.Marker({ color: '#eb6834' }) });
     })();
     return () => {
       cancelled = true;
-      clearInterval(timer);
+      removeNightOverlay?.();
       created?.remove();
     };
   }, [start]);
@@ -114,25 +100,8 @@ export function MapView({ place, onPick, dark = false }: Props) {
 
   return (
     <div class="map-wrap">
-      <div ref={container} class="map" role="application" aria-label="Map: click to choose a place" />
+      <div ref={container} class="map" data-dark={dark} role="application" aria-label="Map: click to choose a place" />
       <p class="map-hint">Click the map to see sunlight anywhere. The shading shows where it’s night now.</p>
     </div>
   );
-}
-
-/** The night side of the Earth as a GeoJSON polygon, from the terminator. */
-function nightPolygon(ms: number): Feature<Polygon> {
-  const sun = subsolarPoint(ms);
-  const r = Math.PI / 180;
-  // Avoid dividing by zero at the equinoxes
-  const tanDec = Math.tan((Math.abs(sun.lat) < 0.01 ? 0.01 : sun.lat) * r);
-  const ring: [number, number][] = [];
-  for (let lng = -180; lng <= 180; lng += 2) {
-    const lat = Math.atan(-Math.cos((lng - sun.lng) * r) / tanDec) / r;
-    ring.push([lng, lat]);
-  }
-  // The pole that's in darkness closes the polygon
-  const pole = sun.lat > 0 ? -85 : 85;
-  ring.push([180, pole], [-180, pole], ring[0]);
-  return { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } };
 }
