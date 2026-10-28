@@ -35,25 +35,26 @@ spaces and punctuation are ignored, with a looser fallback for misspellings.
 
 ## Running it
 
-Needs Node 24 or later (the data scripts are TypeScript, run directly).
+Needs Node 24 or later (the data scripts are TypeScript, run directly) and
+pnpm, which fetches the version named in package.json.
 
-    npm install
-    npm run data:fetch     # download GeoNames' cities500 into data/ (needs curl and unzip)
-    npm run data:local     # build data/places.sql and load it into local D1
-    npm run dev            # http://localhost:4321
+    pnpm install
+    pnpm data:fetch        # download GeoNames' cities500 into data/ (needs curl and unzip)
+    pnpm data:local        # build data/places.sql and load it into local D1
+    pnpm dev               # http://localhost:4321
 
 Without `data:fetch`, `data:local` loads the small sample in `reference/`.
 The full set is about 237,000 places and takes half a minute to load.
 
-    npm test               # sun maths, time zones, normalisation, URLs
-    npm run check          # TypeScript
-    npm run preview        # production build in workerd, on :8787
+    pnpm test              # sun maths, time zones, normalisation, URLs
+    pnpm check             # TypeScript
+    pnpm preview           # production build in workerd, on :8787
 
 ## Deploying
 
-    npx wrangler d1 create equilux       # put the database_id in wrangler.jsonc
-    npm run data:remote
-    npm run deploy
+    pnpm exec wrangler d1 create equilux   # put the database_id in wrangler.jsonc
+    pnpm data:remote
+    pnpm run deploy        # not "pnpm deploy", which is a pnpm command
 
 ## Credits and licence
 
