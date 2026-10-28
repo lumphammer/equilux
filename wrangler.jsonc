@@ -4,15 +4,27 @@
   "main": "@astrojs/cloudflare/entrypoints/server",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
-  "assets": { "directory": "./dist", "binding": "ASSETS" },
-  "observability": { "enabled": true },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+  },
+  "observability": {
+    "enabled": true,
+  },
+  // A Custom Domain: Cloudflare creates the DNS record and certificate on
+  // deploy. Needs lumphammer.net on the same Cloudflare account.
+  "routes": [
+    {
+      "pattern": "equilux.lumphammer.net",
+      "custom_domain": true,
+    },
+  ],
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "equilux",
-      // Replace with the ID from `wrangler d1 create equilux` before deploying
-      "database_id": "00000000-0000-0000-0000-000000000000",
-      "migrations_dir": "migrations"
-    }
-  ]
+      "database_id": "1d09e098-baac-4a91-a0a0-c6931a8dfcbf",
+      "migrations_dir": "migrations",
+    },
+  ],
 }
