@@ -12,6 +12,8 @@ import { addNightOverlay } from '../lib/night-overlay.ts';
 interface Props {
   place: Place | null;
   dark?: boolean;
+  /** Shade night at this time instead of now */
+  now?: number;
   onPick: (lat: number, lng: number) => void;
 }
 
@@ -24,14 +26,22 @@ const STYLES = {
  * The map: click anywhere to see sunlight there. Shades where it's night
  * right now. MapLibre is big, so it loads after the rest of the page.
  */
-export function MapView({ place, onPick, dark = false }: Props) {
+export function MapView({ place, onPick, dark = false, now }: Props) {
   const container = useRef<HTMLDivElement>(null);
-  const [view, setView] = useState<{ map: MapLibreMap; marker: Marker } | null>(null);
+  const [view, setView] = useState<{
+    map: MapLibreMap;
+    marker: Marker;
+    nightOverlay: ReturnType<typeof addNightOverlay>;
+  } | null>(null);
   const styleRef = useRef(dark);
   const darkRef = useRef(dark);
   useEffect(() => {
     darkRef.current = dark;
   }, [dark]);
+  const nowRef = useRef(now);
+  useEffect(() => {
+    nowRef.current = now;
+  }, [now]);
   // Where the map starts; later places move it rather than recreate it
   const [start] = useState(() =>
     place
@@ -42,7 +52,7 @@ export function MapView({ place, onPick, dark = false }: Props) {
   useEffect(() => {
     let cancelled = false;
     let created: MapLibreMap | undefined;
-    let removeNightOverlay: (() => void) | undefined;
+    let nightOverlay: ReturnType<typeof addNightOverlay> | undefined;
     (async () => {
       const maplibre = await import('maplibre-gl');
       maplibre.setWorkerUrl(workerUrl);
@@ -60,16 +70,20 @@ export function MapView({ place, onPick, dark = false }: Props) {
       // Falls back to filling the browser viewport when native fullscreen is unavailable (e.g. iPhone).
       // Also allows one-finger panning while fullscreen, restoring cooperative gestures on exit.
       map.addControl(new maplibre.FullscreenControl(), 'top-right');
-      removeNightOverlay = addNightOverlay(map);
+      nightOverlay = addNightOverlay(map, () => nowRef.current ?? Date.now());
       created = map;
-      setView({ map, marker: new maplibre.Marker({ color: '#eb6834' }) });
+      setView({ map, marker: new maplibre.Marker({ color: '#eb6834' }), nightOverlay });
     })();
     return () => {
       cancelled = true;
-      removeNightOverlay?.();
+      nightOverlay?.remove();
       created?.remove();
     };
   }, [start]);
+
+  useEffect(() => {
+    if (now !== undefined) view?.nightOverlay.update();
+  }, [view, now]);
 
   useEffect(() => {
     if (view && styleRef.current !== dark) {

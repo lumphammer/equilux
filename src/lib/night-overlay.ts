@@ -4,8 +4,11 @@ import { subsolarPoint } from './sun.ts';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const MERCATOR_LIMIT = 85.051129;
 
-/** A CSS-blended night tint, separate from MapLibre's WebGL canvas. */
-export function addNightOverlay(map: MapLibreMap) {
+/**
+ * A CSS-blended night tint, separate from MapLibre's WebGL canvas. Follows
+ * the real time unless given another clock.
+ */
+export function addNightOverlay(map: MapLibreMap, clock: () => number = Date.now) {
   const overlay = document.createElementNS(SVG_NS, 'svg');
   overlay.classList.add('map-night-overlay');
   overlay.setAttribute('aria-hidden', 'true');
@@ -15,7 +18,7 @@ export function addNightOverlay(map: MapLibreMap) {
   const canvas = map.getCanvas();
   map.getCanvasContainer().insertBefore(overlay, canvas.nextSibling);
 
-  let ring = nightRing(Date.now());
+  let ring = nightRing(clock());
   const draw = () => {
     const bounds = map.getBounds();
     const firstWorld = Math.floor((bounds.getWest() + 180) / 360);
@@ -35,7 +38,7 @@ export function addNightOverlay(map: MapLibreMap) {
     path.setAttribute('d', paths.join(' '));
   };
   const update = () => {
-    ring = nightRing(Date.now());
+    ring = nightRing(clock());
     draw();
   };
   map.on('move', draw);
@@ -44,12 +47,15 @@ export function addNightOverlay(map: MapLibreMap) {
   const timer = setInterval(update, 60_000);
   draw();
 
-  return () => {
-    clearInterval(timer);
-    document.removeEventListener('visibilitychange', update);
-    map.off('move', draw);
-    map.off('resize', draw);
-    overlay.remove();
+  return {
+    update,
+    remove() {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', update);
+      map.off('move', draw);
+      map.off('resize', draw);
+      overlay.remove();
+    },
   };
 }
 

@@ -1,0 +1,69 @@
+---
+// A test bed for the time-of-day palette: the main page's colouring,
+// with a scrubber for the time instead of the clock.
+import Base from '../layouts/Base.astro';
+import PaletteTest, { PALETTE_DAY, PALETTE_PLACE, PALETTE_START_MINUTE } from '../components/PaletteTest.tsx';
+import { requestLocale } from '../lib/locale.ts';
+import { solarTheme } from '../lib/theme.ts';
+
+const theme = solarTheme(PALETTE_PLACE, PALETTE_DAY + PALETTE_START_MINUTE * 60_000);
+---
+<Base theme={theme} title="Palette test · Equilux">
+  <PaletteTest client:load locale={requestLocale(Astro.request)} />
+</Base>
+<style is:global>
+  /* Follow the scrubber immediately, rather than easing like the clock-driven page */
+  :root,
+  .map-night-overlay {
+    transition: none !important;
+  }
+  .palette-scrubber {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    margin: 0 -20px 16px;
+    padding: 12px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .palette-scrubber-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .palette-time {
+    flex: 1;
+    display: grid;
+    gap: 4px;
+  }
+  .palette-time input {
+    width: 100%;
+    margin: 0;
+  }
+  .palette-gradient {
+    height: 10px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+  }
+  .palette-clock {
+    min-width: 7em;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .palette-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.8rem;
+  }
+  .palette-swatches .swatch {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    vertical-align: -2px;
+    border: 1px solid var(--border);
+  }
+</style>
