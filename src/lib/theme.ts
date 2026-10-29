@@ -9,6 +9,8 @@ const RED: RGB = [115, 44, 59];
 const CIVIL: RGB = [57, 49, 87];
 const NAUTICAL: RGB = [17, 33, 66];
 const ASTRONOMICAL: RGB = [5, 14, 33];
+// Retain a blue hue at the darkest point so the map’s colour blend stays visible.
+const MIDNIGHT: RGB = [2, 8, 24];
 const BLACK: RGB = [0, 0, 0];
 
 function mix(a: RGB, b: RGB, amount: number): RGB {
@@ -19,7 +21,7 @@ function mix(a: RGB, b: RGB, amount: number): RGB {
 
 function sky(altitude: number, dark: boolean): RGB {
   const stops: [number, RGB][] = [
-    [-30, BLACK],
+    [-30, MIDNIGHT],
     [ALTITUDES.astronomical, ASTRONOMICAL],
     [ALTITUDES.nautical, NAUTICAL],
     [ALTITUDES.civil, CIVIL],
@@ -60,7 +62,7 @@ export function solarTheme(place: { lat: number; lng: number }, now: number) {
   for (let i = 0; i < days.length - 1; i++) {
     const sunset = days[i].crossings.day;
     const sunrise = days[i + 1].crossings.day;
-    // A real night reaches black halfway from sunset to the next sunrise.
+    // A real night reaches its deepest blue halfway from sunset to the next sunrise.
     // During polar day/night, use the sun's lowest altitude instead.
     const at =
       typeof sunset === 'object' && typeof sunrise === 'object'
@@ -68,7 +70,7 @@ export function solarTheme(place: { lat: number; lng: number }, now: number) {
         : (days[i].noon + days[i + 1].noon) / 2;
     const colour =
       typeof sunset === 'object' && typeof sunrise === 'object'
-        ? BLACK
+        ? MIDNIGHT
         : sky(Math.abs(place.lat + (days[i].declination + days[i + 1].declination) / 2) - 90, dark);
     anchors.push({ at, colour });
   }

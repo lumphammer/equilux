@@ -31,12 +31,12 @@ describe('solar theme', () => {
     expect(page(crossing('civil').set + 60_000)).not.toBe(page(crossing('civil').set));
   });
 
-  it('reaches black halfway through the night, including across a clock change', () => {
+  it('reaches midnight blue halfway through the night, including across a clock change', () => {
     for (const date of [24, 28]) {
       const evening = solarDay(Date.UTC(2026, 9, date, 12), london.lat, london.lng).crossings.day;
       const morning = solarDay(Date.UTC(2026, 9, date + 1, 12), london.lat, london.lng).crossings.day;
       if (typeof evening === 'string' || typeof morning === 'string') throw new Error('Missing night');
-      expect(solarTheme(london, (evening.set + morning.rise) / 2).variables['--page']).toBe('rgb(0, 0, 0)');
+      expect(solarTheme(london, (evening.set + morning.rise) / 2).variables['--page']).toBe('rgb(2, 8, 24)');
     }
   });
 
@@ -54,6 +54,7 @@ describe('solar theme', () => {
       const winter = solarTheme(pole, Date.UTC(2026, 11, 21, hour));
       expect(summer.mode).toBe('light');
       expect(winter.mode).toBe('dark');
+      expect(winter.variables['--page']).not.toBe('rgb(0, 0, 0)');
       expect(JSON.stringify([summer, winter])).not.toMatch(/NaN|undefined/);
     }
     const whiteNight = solarTheme(london, Date.UTC(2026, 5, 21, 23));
